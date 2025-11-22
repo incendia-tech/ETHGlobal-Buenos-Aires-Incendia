@@ -1,11 +1,13 @@
 // Auction contract interaction utilities
 
 import type { ProofData } from "./auction-abi"
+import { AUCTION_ABI } from "./auction-abi"
 import { sendTransaction, waitForTransaction, encodeUint256, encodeUint256Array } from "../ethereum/transactions"
 import { encodeFunctionData } from "viem"
+import { getMetaMaskProvider, getConnectedAccount } from "../ethereum/wallet"
 
-// Auction contract ABI for submitBid function
-const AUCTION_ABI = [
+// Auction contract ABI for submitBid function only (for backward compatibility)
+const SUBMIT_BID_ABI = [
   {
     inputs: [
       { internalType: "uint256[2]", name: "proofA", type: "uint256[2]" },
@@ -116,7 +118,7 @@ function createBidTransactionData(proof: Groth16Proof, publicSignals: string[], 
     
     // Encode the function call using viem
     const functionData = encodeFunctionData({
-      abi: AUCTION_ABI,
+      abi: SUBMIT_BID_ABI,
       functionName: 'submitBid',
       args: [
         convertedProof.pi_a.map(BigInt) as [bigint, bigint], // proofA
@@ -150,5 +152,131 @@ function convertG2Format(proof: Groth16Proof): Groth16Proof {
     pi_c: proof.pi_c.slice(0, 2), // Take first 2 elements
     protocol: proof.protocol,
     curve: proof.curve
+  }
+}
+
+// Registration utility functions
+export interface ProofVerificationParams {
+  version: string
+  proofVerificationData: {
+    vkeyHash: string
+    proof: string
+    publicInputs: string[]
+  }
+  committedInputs: string
+  serviceConfig: {
+    validityPeriodInSeconds: bigint
+    domain: string
+    scope: string
+    devMode: boolean
+  }
+}
+
+/**
+ * Check if a user is registered in the auction contract
+ */
+export async function checkRegistration(contractAddress: string, userAddress: string): Promise<boolean> {
+  const provider = await getMetaMaskProvider()
+  if (!provider) {
+    throw new Error("MetaMask not connected")
+  }
+
+  try {
+    // Call userIdentifiers mapping
+    const functionData = encodeFunctionData({
+      abi: AUCTION_ABI,
+      functionName: 'userIdentifiers',
+      args: [userAddress as `0x${string}`]
+    })
+
+    const result = await provider.request({
+      method: "eth_call",
+      params: [
+        {
+          to: contractAddress,
+          data: functionData
+        },
+        "latest"
+      ]
+    })
+
+    // If result is not 0x0000...000, user is registered
+    const identifier = BigInt(result || "0x0")
+    return identifier !== BigInt(0)
+  } catch (error: any) {
+    console.error("Error checking registration via userIdentifiers:", error)
+    // If the call reverts, try using IsRegistered view function
+    try {
+      const isRegisteredData = encodeFunctionData({
+        abi: AUCTION_ABI,
+        functionName: 'IsRegistered'
+      })
+
+      await provider.request({
+        method: "eth_call",
+        params: [
+          {
+            to: contractAddress,
+            data: isRegisteredData,
+            from: userAddress
+          },
+          "latest"
+        ]
+      })
+      return true
+    } catch {
+      return false
+    }
+  }
+}
+
+/**
+ * Register a user with ZKPassport proof parameters
+ */
+export async function registerToAuction(
+  contractAddress: string,
+  params: ProofVerificationParams,
+  isIDCard: boolean = false
+): Promise<string> {
+  try {
+    const provider = await getMetaMaskProvider()
+    if (!provider) {
+      throw new Error("MetaMask not connected")
+    }
+
+    const account = await getConnectedAccount()
+    if (!account) {
+      throw new Error("No connected account")
+    }
+
+    // Convert params to proper format for encoding
+    const registerParams = {
+      version: params.version as `0x${string}`,
+      proofVerificationData: {
+        vkeyHash: params.proofVerificationData.vkeyHash as `0x${string}`,
+        proof: params.proofVerificationData.proof as `0x${string}`,
+        publicInputs: params.proofVerificationData.publicInputs.map(pi => pi as `0x${string}`)
+      },
+      committedInputs: params.committedInputs as `0x${string}`,
+      serviceConfig: {
+        validityPeriodInSeconds: params.serviceConfig.validityPeriodInSeconds,
+        domain: params.serviceConfig.domain,
+        scope: params.serviceConfig.scope,
+        devMode: params.serviceConfig.devMode
+      }
+    }
+
+    const functionData = encodeFunctionData({
+      abi: AUCTION_ABI,
+      functionName: 'register',
+      args: [registerParams, isIDCard]
+    })
+
+    const txHash = await sendTransaction(contractAddress, "0x0", functionData)
+    await waitForTransaction(txHash)
+
+    return txHash
+  } catch (error: any) {
+    throw new Error(`Registration failed: ${error.message || error}`)
   }
 }

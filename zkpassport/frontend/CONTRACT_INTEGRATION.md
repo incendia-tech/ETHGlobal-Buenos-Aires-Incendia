@@ -10,7 +10,7 @@ Create a `.env.local` file in the frontend directory with the following variable
 
 ```bash
 # Sepolia RPC URL (get from Infura, Alchemy, or other providers)
-SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
+SEPOLIA_RPC_URL=https://eth-sepolia.api.onfinality.io/public
 
 # Contract addresses (deployed on Sepolia)
 FACTORY_ADDRESS=0xc5af9d7b8d881a6e3121817507bea1431d0e61e7

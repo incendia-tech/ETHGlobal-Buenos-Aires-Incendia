@@ -13,7 +13,7 @@ import { ArrowLeft, Flame, Clock, Wallet, CheckCircle2, Loader2, ExternalLink, U
 import Link from "next/link"
 import { getMetaMaskProvider, connectWallet as connectMetaMask, getConnectedAccount } from "@/lib/ethereum/wallet"
 import { sendTransaction, waitForTransaction } from "@/lib/ethereum/transactions"
-import { submitBidToContract, parseGroth16Proof, type Groth16Proof } from "@/lib/contracts/auction"
+import { submitBidToContract, parseGroth16Proof, type Groth16Proof, checkRegistration } from "@/lib/contracts/auction"
 import { parseEther } from "viem"
 import { getAuctionDetails } from "@/lib/contracts/factory"
 import { BurnAddressCalculator } from "@/lib/contracts/burn-address-calculator"
@@ -102,8 +102,22 @@ export default function AuctionPage() {
     if (account) {
       setWalletAddress(account)
       setWalletConnected(true)
-      setCurrentStep("input")
       await getNetworkName()
+      
+      // Check if user is registered
+      try {
+        const isRegistered = await checkRegistration(contractAddress, account)
+        if (!isRegistered) {
+          // Redirect to registration page
+          router.push(`/auction/${contractAddress}/register`)
+          return
+        }
+        setCurrentStep("input")
+      } catch (error) {
+        console.error("Error checking registration:", error)
+        // If check fails, still allow proceeding (maybe the contract isn't deployed yet)
+        setCurrentStep("input")
+      }
     }
   }
 
@@ -132,8 +146,22 @@ export default function AuctionPage() {
       const { account } = await connectMetaMask()
       setWalletAddress(account)
       setWalletConnected(true)
-      setCurrentStep("input")
       await getNetworkName()
+      
+      // Check if user is registered
+      try {
+        const isRegistered = await checkRegistration(contractAddress, account)
+        if (!isRegistered) {
+          // Redirect to registration page
+          router.push(`/auction/${contractAddress}/register`)
+          return
+        }
+        setCurrentStep("input")
+      } catch (error) {
+        console.error("Error checking registration:", error)
+        // If check fails, still allow proceeding (maybe the contract isn't deployed yet)
+        setCurrentStep("input")
+      }
     } catch (error: any) {
       console.error("Failed to connect wallet:", error)
       setError(error.message || "Failed to connect to MetaMask")

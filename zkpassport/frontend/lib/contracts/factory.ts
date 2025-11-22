@@ -3,7 +3,7 @@ import { createPublicClient, http } from 'viem'
 import { sepolia } from 'viem/chains'
 
 // Public Sepolia RPC endpoint (fallback)
-const PUBLIC_RPC = process.env.SEPOLIA_RPC_URL || "https://ethereum-sepolia.publicnode.com"
+const PUBLIC_RPC = process.env.SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com"
 
 // Setup viem client
 const publicClient = createPublicClient({
@@ -269,7 +269,7 @@ export async function fetchDeployedAuctions(): Promise<DeployedAuction[]> {
     
     // Known auction addresses (since the salt approach is failing)
     const knownAddresses = [
-      "0xF87b213D0bF5c445b9515cA570B357806C6C7c66",
+      "0x86365C9dD22Ef6458Ae1ab5E057D653c747fAd52",
       "0xB7b475ED68bCf3e30578aF49277CB78aE5Ca8C5e", 
       "0x291842511Ac92e2Dc31d82073919Db8f00be3964",
       "0x6C16C0a19815591C880C026eC8239166CF313A30",

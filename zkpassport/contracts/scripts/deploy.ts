@@ -23,9 +23,9 @@ async function main() {
   console.log("Deploying Auction...");
   
   const ceremonyId = 1n;
-  const biddingDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-  const submissionDeadline = BigInt(biddingDeadline + 3600n);
-  const resultDeadline = BigInt(submissionDeadline + 3600n);
+  const biddingDeadline = BigInt(Math.floor(Date.now() / 1000) + 43200);
+  const submissionDeadline = BigInt(biddingDeadline + 43200n);
+  const resultDeadline = BigInt(submissionDeadline + 43200n);
   const maxWinners = 10n;
   const salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
   const zkPassportVerifier = "0x1D000001000EFD9a6371f4d90bB8920D5431c0D8";
