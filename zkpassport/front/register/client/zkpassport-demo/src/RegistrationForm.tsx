@@ -1,4 +1,4 @@
-import { ZKPassport } from "@zkpassport/sdk";
+import { ZKPassport, type ProofResult } from "@zkpassport/sdk";
 import { useState, useRef  } from "react";
 import QRCode from "react-qr-code"; // For QR code generation
 
@@ -11,14 +11,16 @@ function RegistrationForm() {
   const [requestId, setRequestId] = useState("");
   const zkpassportRef = useRef<ZKPassport | null>(null);
 
-  const handleSubmit = async (e) => {
+
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setVerificationStatus("initiating");
 
     try {
       // Initialize the ZKPassport SDK
       if (!zkpassportRef.current) {
-        zkpassportRef.current = new ZKPassport("incendia.tech/");
+        zkpassportRef.current = new ZKPassport("localhost");
       }
 
       // Create a verification request
@@ -26,6 +28,7 @@ function RegistrationForm() {
         name: "Incendia",
         logo: "https://yourapp.com/logo.png",
         purpose: "Account verification for registration",
+        mode: "compressed-evm",
         devMode: true,
       });
 
@@ -44,24 +47,31 @@ function RegistrationForm() {
       // Save the URL and requestId to display and for potential cancellation
       setVerificationUrl(url);
       setRequestId(requestId);
+      console.log("Verification URL:", url);
+      console.log("Request ID:", requestId);
 
       // Update status to show we're waiting for the user to scan the QR code
       setVerificationStatus("awaiting_scan");
 
       // Register event handlers
       onRequestReceived(() => {
+        console.log("Request received");
         setVerificationStatus("request_received");
       });
 
       onGeneratingProof(() => {
+        console.log("Generating proof");
         setVerificationStatus("generating_proof");
       });
 
       // Store the proofs and query result to send to the server
-      const proofs = [];
+      const proofs: ProofResult[] = [];
 
-      onProofGenerated((proof) => {
-        proofs.push(proof);
+      onProofGenerated(({ proof, vkeyHash, version, name }: ProofResult) => {
+        console.log("Proof generated", proof);
+        console.log("Verification key hash", vkeyHash);
+        console.log("Version", version);
+        console.log("Name", name);
       });
 
       onResult(async ({ verified, result: queryResult }) => {
@@ -119,7 +129,7 @@ function RegistrationForm() {
         setVerificationStatus("error");
       });
     } catch (err) {
-      setError(`Failed to initialize verification: ${err.message}`);
+      setError(`Failed to initialize verification: ${err instanceof Error ? err.message : "Unknown error"}`);
       setVerificationStatus("error");
     }
   };
