@@ -170,10 +170,10 @@ describe("Auction Contract", async function () {
     const auction = await viem.getContractAt("Auction", auctionAddress);
 
     // Create invalid proof
-    const invalidProofA = ["0", "0"];
-    const invalidProofB = [["0", "0"], ["0", "0"]];
-    const invalidProofC = ["0", "0"];
-    const invalidPubSignals = ["0", "0", "0", "0", "0", "0"];
+    const invalidProofA: readonly [bigint, bigint] = [0n, 0n];
+    const invalidProofB: readonly [readonly [bigint, bigint], readonly [bigint, bigint]] = [[0n, 0n], [0n, 0n]];
+    const invalidProofC: readonly [bigint, bigint] = [0n, 0n];
+    const invalidPubSignals: readonly [bigint, bigint, bigint, bigint, bigint, bigint] = [0n, 0n, 0n, 0n, 0n, 0n];
 
     // Try to submit bid with invalid proof
     try {
