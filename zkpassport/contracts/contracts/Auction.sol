@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-
+import "./IZKPassportVerifier.sol";
+import "./IZKPassportHelper.sol";
 import "./verifier.sol";
 
 contract Auction {
    Groth16Verifier public verifier;
+   IZKPassportVerifier public zkPassportVerifier;
 
    error InvalidProof();
 
@@ -25,7 +27,7 @@ contract Auction {
 
     bool private initialized = false;
     mapping(uint256 => bool) public usedNullifiers;
-
+    mapping(address => bytes32) public userIdentifiers;
 // dont need a construtor since its deployed through factory
     function initialize(
         address _verifier,
@@ -33,7 +35,8 @@ contract Auction {
         uint256 _submissionDeadline,
         uint256 _resultDeadline,
         uint256 _ceremonyId,
-        uint256 _maxWinners
+        uint256 _maxWinners,
+        address _verifierAddress
     ) external {
         verifier = Groth16Verifier(_verifier);
         biddingDeadline = _biddingDeadline;
@@ -42,6 +45,7 @@ contract Auction {
         ceremonyId = _ceremonyId;
         winners = new address[](_maxWinners);
         winningBids = new uint256[](_maxWinners);
+        zkPassportVerifier = IZKPassportVerifier(_verifierAddress);
         initialized = true;
     }
 
@@ -84,5 +88,40 @@ contract Auction {
         return false;
     }
 
+
+
+    function register(ProofVerificationParams calldata params, bool isIDCard) public returns (bytes32) {
+        (bool verified, bytes32 uniqueIdentifier, IZKPassportHelper helper) = zkPassportVerifier.verifyProof(params);
+        require(verified, "Proof is invalid");
+
+        require(
+          helper.verifyScopes(params.proofVerificationData.publicInputs, "your-domain.com", "my-scope"),
+          "Invalid scope"
+        );
+
+        bool isAgeAboveOrEqual = helper.isAgeAboveOrEqual(
+          18,
+          params.committedInputs
+        );
+
+        DisclosedData memory disclosedData = helper.getDisclosedData(
+          params.committedInputs,
+          isIDCard
+        );
+        string memory nationality = disclosedData.nationality;
+
+        BoundData memory boundData = helper.getBoundData(params.committedInputs);
+        require(boundData.senderAddress == msg.sender, "Not the expected sender");
+        require(boundData.chainId == block.chainid, "Invalid chain id");
+        require(boundData.customData == "my-custom-data", "Invalid custom data");
+
+        userIdentifiers[msg.sender] = uniqueIdentifier;
+
+        return uniqueIdentifier;
+    }
+
+    function IsRegistered() public view {
+        require(userIdentifiers[msg.sender] != bytes32(0), "Not verified");
+    }
 
 }
