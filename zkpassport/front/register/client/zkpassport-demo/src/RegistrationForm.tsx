@@ -18,7 +18,7 @@ function RegistrationForm() {
     try {
       // Initialize the ZKPassport SDK
       if (!zkpassportRef.current) {
-        zkpassportRef.current = new ZKPassport();
+        zkpassportRef.current = new ZKPassport("incendia.tech/");
       }
 
       // Create a verification request
@@ -77,7 +77,9 @@ function RegistrationForm() {
           // Send the proofs and query result to your server for verification
           setVerificationStatus("sending_to_server");
 
-          const response = await fetch("localhost:3000/register", {
+          console.log(proofs);
+
+          const response = await fetch("https://localhost:3000/register", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
