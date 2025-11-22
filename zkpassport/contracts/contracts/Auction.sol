@@ -46,4 +46,27 @@ contract Auction {
     }
 
 
+    function submitBid(
+        uint256[2] calldata proofA,
+        uint256[2][2] calldata proofB,
+        uint256[2] calldata proofC,
+        uint256[6] calldata pubSignals,
+        uint256 _bid
+    ) external payable {
+        // Check if nullifier has already been used
+        if (usedNullifiers[pubSignals[1]]) revert InvalidProof();
+
+        bool proofIsValid = verifier.verifyProof(
+            proofA, proofB, proofC, pubSignals
+        );
+        if (!proofIsValid) revert InvalidProof();
+
+        usedNullifiers[pubSignals[1]] = true;
+
+        checkAndInsertBid(_bid, msg.sender);
+
+        emit BidSubmitted(msg.sender, pubSignals[3]);
+    }
+
+
 }
