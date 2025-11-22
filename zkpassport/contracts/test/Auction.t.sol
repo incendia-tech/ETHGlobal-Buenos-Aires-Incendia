@@ -4,12 +4,13 @@ pragma solidity ^0.8.0;
 import "../contracts/Auction.sol";
 import "../contracts/verifier.sol";
 import "../contracts/Factory.sol";
+import "../contracts/IZKPassportVerifier.sol";
 
 contract AuctionTest {
     Groth16Verifier public verifier;
+   IZKPassportVerifier public zkPassportVerifier;
     Factory public factory;
     Auction public auction;
-    
     uint256 public ceremonyId = 1;
     uint256 public biddingDeadline;
     uint256 public submissionDeadline;
@@ -19,6 +20,7 @@ contract AuctionTest {
 
     function setUp() public {
         verifier = new Groth16Verifier();
+        zkPassportVerifier = new IZKPassportVerifier();
         factory = new Factory();
         
         biddingDeadline = block.timestamp + 3600;
@@ -34,7 +36,8 @@ contract AuctionTest {
             submissionDeadline,
             resultDeadline,
             ceremonyId,
-            maxWinners
+            maxWinners,
+            address(zkPassportVerifier)
         );
         
         auction = Auction(auctionAddress);

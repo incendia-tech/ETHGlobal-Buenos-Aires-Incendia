@@ -28,7 +28,7 @@ async function main() {
   const resultDeadline = BigInt(submissionDeadline + 3600n);
   const maxWinners = 10n;
   const salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
-  
+  const zkPassportVerifier = "0x1D000001000EFD9a6371f4d90bB8920D5431c0D8";
   const txHash = await factory.write.deployAuctionContract([
     salt,
     0,
@@ -37,7 +37,8 @@ async function main() {
     submissionDeadline,
     resultDeadline,
     ceremonyId,
-    maxWinners
+    maxWinners,
+    zkPassportVerifier
   ]);
   
   const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });

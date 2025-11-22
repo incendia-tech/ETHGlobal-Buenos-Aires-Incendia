@@ -21,7 +21,8 @@ contract Factory {
         uint256 _submissionDeadline,
         uint256 _resultDeadline,
         uint256 _ceremonyId,
-        uint256 _maxWinners
+        uint256 _maxWinners,
+        address _zkPassportVerifierAddress
     ) external returns (address) {
         if (contracts[_salt] != address(0)) revert SaltAlreadyUsed(_salt);
         
@@ -44,7 +45,8 @@ contract Factory {
             _submissionDeadline,
             _resultDeadline,
             _ceremonyId,
-            _maxWinners
+            _maxWinners,
+            _zkPassportVerifierAddress
         );
 
         contracts[_salt] = auctionAddress;

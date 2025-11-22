@@ -35,8 +35,8 @@ contract Auction {
         uint256 _submissionDeadline,
         uint256 _resultDeadline,
         uint256 _ceremonyId,
-        uint256 _maxWinners,
-        address _verifierAddress
+        uint256 _maxWinners,    
+        address _zkPassportVerifierAddress
     ) external {
         verifier = Groth16Verifier(_verifier);
         biddingDeadline = _biddingDeadline;
@@ -45,7 +45,7 @@ contract Auction {
         ceremonyId = _ceremonyId;
         winners = new address[](_maxWinners);
         winningBids = new uint256[](_maxWinners);
-        zkPassportVerifier = IZKPassportVerifier(_verifierAddress);
+        zkPassportVerifier = IZKPassportVerifier(_zkPassportVerifierAddress);
         initialized = true;
     }
 
@@ -58,6 +58,7 @@ contract Auction {
         uint256 _bid
     ) external payable {
         // Check if nullifier has already been used
+        IsRegistered();
         if (usedNullifiers[pubSignals[1]]) revert InvalidProof();
 
         bool proofIsValid = verifier.verifyProof(
@@ -91,7 +92,7 @@ contract Auction {
 
 
     function register(ProofVerificationParams calldata params, bool isIDCard) public returns (bytes32) {
-        (bool verified, bytes32 uniqueIdentifier, IZKPassportHelper helper) = zkPassportVerifier.verifyProof(params);
+        (bool verified, bytes32 uniqueIdentifier, IZKPassportHelper helper) = zkPassportVerifier.verify(params);
         require(verified, "Proof is invalid");
 
         require(
@@ -104,6 +105,7 @@ contract Auction {
           params.committedInputs
         );
 
+        require(isAgeAboveOrEqual, "Age is not above or equal to 18");
         DisclosedData memory disclosedData = helper.getDisclosedData(
           params.committedInputs,
           isIDCard
@@ -113,7 +115,6 @@ contract Auction {
         BoundData memory boundData = helper.getBoundData(params.committedInputs);
         require(boundData.senderAddress == msg.sender, "Not the expected sender");
         require(boundData.chainId == block.chainid, "Invalid chain id");
-        require(boundData.customData == "my-custom-data", "Invalid custom data");
 
         userIdentifiers[msg.sender] = uniqueIdentifier;
 

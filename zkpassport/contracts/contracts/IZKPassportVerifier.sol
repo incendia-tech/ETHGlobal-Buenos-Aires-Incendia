@@ -1,29 +1,10 @@
+//spdx-license-identifier: MIT
 pragma solidity ^0.8.21;
+
 
 
 import "./IZKPassportHelper.sol";
 
-/**
- * @notice The data that can be disclosed by the proof
- */
-struct DisclosedData {
-    // The name of the ID holder (includes the angular brackets from the MRZ)
-    string name;
-    // The issuing country of the ID
-    string issuingCountry;
-    // The nationality of the ID holder
-    string nationality;
-    // The gender of the ID holder
-    string gender;
-    // The birth date of the ID holder
-    string birthDate;
-    // The expiry date of the ID
-    string expiryDate;
-    // The document number of the ID
-    string documentNumber;
-    // The type of the document
-    string documentType;
-}
 
 // ProofVerificationParams
 // │
@@ -77,7 +58,7 @@ interface IZKPassportVerifier {
   /**
    * @notice Verifies a proof from ZKPassport
    * @param params The proof verification parameters
-   * @return isValid True if the proof is valid, false otherwise
+   * @return verified True if the proof is valid, false otherwise
    * @return uniqueIdentifier The unique identifier associated to the identity document that generated the proof
    * @return helper The ZKPassportHelper contract that can be used to verify the information or conditions that are checked by the proof
    */
