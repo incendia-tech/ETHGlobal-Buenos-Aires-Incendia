@@ -66,16 +66,16 @@ function RegistrationForm() {
 
       // Store the proofs and query result to send to the server
       const proofs: ProofResult[] = [];
+      let proof: ProofResult;
 
-      onProofGenerated(({ proof, vkeyHash, version, name }: ProofResult) => {
-        console.log("Proof generated", proof);
-        console.log("Verification key hash", vkeyHash);
-        console.log("Version", version);
-        console.log("Name", name);
+      onProofGenerated((proofResult: ProofResult) => {
+        console.log("Proof generated:", proofResult);
+        proof = proofResult;
       });
 
       onResult(async ({ verified, result: queryResult }) => {
         setVerificationStatus("proof_generated");
+        console.log("Query verified???:", verified);
 
         if (!verified) {
           setError("Verification failed on client-side");
@@ -86,11 +86,19 @@ function RegistrationForm() {
         try {
           // Send the proofs and query result to your server for verification
           setVerificationStatus("sending_to_server");
+          
 
-          console.log(proofs);
+          // console.log(proofs);
+          setVerificationStatus("success");
+          const verifierParams = zkpassportRef.current?.getSolidityVerifierParameters({
+            proof: proof
+          });
+  
+          console.log("Submitting on-chain verification transaction...");
+          console.log("Verifier parameters:", verifierParams);
 
           const response = await fetch("https://localhost:3000/register", {
-            method: "POST",
+            method: "POST", 
             headers: {
               "Content-Type": "application/json",
             },
@@ -108,6 +116,12 @@ function RegistrationForm() {
 
           if (data.success) {
             setVerificationStatus("success");
+            const verifierParams = zkpassportRef.current?.getSolidityVerifierParameters({
+              proof: proof
+            });
+    
+            console.log("Submitting on-chain verification transaction...");
+            console.log("Verifier parameters:", verifierParams);
             // Here you can redirect to the user's profile or home page
           } else {
             setError(data.error || "Registration failed");
