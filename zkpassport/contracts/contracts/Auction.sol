@@ -110,8 +110,6 @@ contract Auction {
           params.committedInputs,
           isIDCard
         );
-        // nationality is available in disclosedData if needed for future checks
-        // string memory nationality = disclosedData.nationality;
 
         BoundData memory boundData = helper.getBoundData(params.committedInputs);
         require(boundData.senderAddress == msg.sender, "Not the expected sender");
