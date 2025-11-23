@@ -28,6 +28,8 @@ export default function RegistrationPage() {
   const [registerTxHash, setRegisterTxHash] = useState("")
   const [networkName, setNetworkName] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false)
+  const [checkingRegistration, setCheckingRegistration] = useState(false)
   
   const zkpassportRef = useRef<ZKPassport | null>(null)
   const proofRef = useRef<ProofResult | null>(null)
@@ -36,6 +38,12 @@ export default function RegistrationPage() {
     checkWalletConnection()
   }, [])
 
+  useEffect(() => {
+    if (walletConnected && walletAddress && auctionId) {
+      checkIfAlreadyRegistered()
+    }
+  }, [walletConnected, walletAddress, auctionId])
+
   const checkWalletConnection = async () => {
     const account = await getConnectedAccount()
     if (account) {
@@ -43,6 +51,24 @@ export default function RegistrationPage() {
       setWalletConnected(true)
       setCurrentStep("verify")
       await getNetworkName()
+    }
+  }
+
+  const checkIfAlreadyRegistered = async () => {
+    if (!auctionId || !walletAddress) return
+    
+    setCheckingRegistration(true)
+    try {
+      const registered = await checkRegistration(auctionId, walletAddress)
+      setIsAlreadyRegistered(registered)
+      if (registered) {
+        setError("You have already registered for this auction. You can only bid once.")
+      }
+    } catch (error: any) {
+      console.error("Error checking registration:", error)
+      // Don't set error here, just log it - allow user to try
+    } finally {
+      setCheckingRegistration(false)
     }
   }
 
@@ -297,13 +323,24 @@ export default function RegistrationPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        <Card className="shadow-lg">
+      <main className="flex items-center justify-center min-h-[calc(100vh-80px)] px-6 py-8">
+        <div className="w-full max-w-2xl">
+          <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl">Register for Auction</CardTitle>
             <CardDescription>
               Complete ZKPassport verification to register for this auction
             </CardDescription>
+            <div className="mt-4 space-y-2">
+              <div className="flex items-start gap-2 text-sm text-gray-700">
+                <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <span>You must be older than 18 to bid in this auction</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm text-gray-700">
+                <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <span>You can only bid once</span>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {error && (
@@ -355,24 +392,36 @@ export default function RegistrationPage() {
                   </p>
                 </div>
 
-                {verificationStatus === "idle" && (
-                  <Button onClick={handleStartVerification} className="w-full" size="lg">
-                    Start Verification
+                {checkingRegistration && (
+                  <div className="text-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">Checking registration status...</p>
+                  </div>
+                )}
+
+                {verificationStatus === "idle" && !checkingRegistration && (
+                  <Button 
+                    onClick={handleStartVerification} 
+                    className="w-full" 
+                    size="lg"
+                    disabled={isAlreadyRegistered}
+                  >
+                    {isAlreadyRegistered ? "Already Registered" : "Start Verification"}
                   </Button>
                 )}
 
                 {verificationStatus === "awaiting_scan" && verificationUrl && (
                   <div className="space-y-4">
-                    <div className="bg-gray-50 p-6 rounded-lg text-center">
-                      <h4 className="text-sm font-semibold text-gray-900 mb-4">
+                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">
                         Scan this QR code with the ZKPassport app
                       </h4>
-                      <div className="flex justify-center mb-4">
-                        <div className="bg-white p-4 rounded-lg">
+                      <div className="flex justify-center mb-3">
+                        <div className="bg-white p-3 rounded-lg">
                           <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(verificationUrl)}`}
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verificationUrl)}`}
                             alt="ZKPassport QR Code"
-                            className="w-64 h-64"
+                            className="w-48 h-48"
                           />
                         </div>
                       </div>
@@ -502,6 +551,7 @@ export default function RegistrationPage() {
             )}
           </CardContent>
         </Card>
+        </div>
       </main>
     </div>
   )

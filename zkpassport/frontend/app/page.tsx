@@ -140,7 +140,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center">
             <Flame className="h-6 w-6 text-gray-900" />
-            <h1 className="ml-2 text-xl font-semibold text-gray-900">Burn Auction</h1>
+            <h1 className="ml-2 text-xl font-semibold text-gray-900">Incendia</h1>
           </div>
         </div>
       </header>
