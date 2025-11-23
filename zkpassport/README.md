@@ -229,6 +229,4 @@ zkpassport/
 ## 🙏 Acknowledgments
 
 - Built for ETHGlobal Buenos Aires
-- Inspired by zero-knowledge voting protocols
 - Uses ZKPassport for identity verification
-- Powered by Circom and Groth16
