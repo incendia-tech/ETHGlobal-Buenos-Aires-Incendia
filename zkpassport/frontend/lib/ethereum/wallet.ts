@@ -75,7 +75,6 @@ export async function getRabbyProvider(): Promise<EthereumProvider | null> {
   return null
 }
 
-// Legacy function name for backward compatibility
 export async function getMetaMaskProvider(): Promise<EthereumProvider | null> {
   return getRabbyProvider()
 }

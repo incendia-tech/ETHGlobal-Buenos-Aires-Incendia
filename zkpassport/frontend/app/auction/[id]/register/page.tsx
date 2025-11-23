@@ -66,7 +66,6 @@ export default function RegistrationPage() {
       }
     } catch (error: any) {
       console.error("Error checking registration:", error)
-      // Don't set error here, just log it - allow user to try
     } finally {
       setCheckingRegistration(false)
     }
@@ -101,7 +100,7 @@ export default function RegistrationPage() {
       await getNetworkName()
     } catch (error: any) {
       console.error("Failed to connect wallet:", error)
-      setError(error.message || "Failed to connect to MetaMask")
+      setError(error.message || "Failed to connect to wallet")
     } finally {
       setIsProcessing(false)
     }
@@ -112,7 +111,6 @@ export default function RegistrationPage() {
     setVerificationStatus("initiating")
 
     try {
-      // Get wallet address and chain ID BEFORE creating the request
       const account = await getConnectedAccount()
       if (!account) {
         throw new Error("Please connect your wallet first")
@@ -123,7 +121,6 @@ export default function RegistrationPage() {
         throw new Error("Rabby not connected")
       }
 
-      // Get current chain ID
       const chainIdHex = await provider.request({ method: "eth_chainId" })
       const chainId = BigInt(chainIdHex)
 
@@ -133,8 +130,6 @@ export default function RegistrationPage() {
         chainIdHex: chainIdHex
       })
 
-      // Initialize the ZKPassport SDK
-      // Note: The domain must match what's checked in the contract (Auction.sol line 99)
       if (!zkpassportRef.current) {
         zkpassportRef.current = new ZKPassport("localhost")
       }
@@ -161,20 +156,15 @@ export default function RegistrationPage() {
         onResult,
         onReject,
         onError,
-      } = query.gte("age", 18).disclose("nationality")  // Bind the user's address to the proof
+      } = query.gte("age", 18).disclose("nationality") 
       .bind("user_address", account as `0x${string}`)
-      // Bind to the chain where the proof will be verified
-      // This is strongly typed to the networks we support and plan to support in the near future
       .bind("chain", "ethereum_sepolia").done()
 
-      console.log("account as `0x${string}:", account as `0x${string}`)
 
-      // Save the URL and requestId
       setVerificationUrl(url)
       setRequestId(requestId)
       setVerificationStatus("awaiting_scan")
 
-      // Register event handlers
       onRequestReceived(() => {
         console.log("Request received")
         setVerificationStatus("request_received")
@@ -201,7 +191,6 @@ export default function RegistrationPage() {
         }
 
         try {
-          // Get solidity verifier parameters
           if (!zkpassportRef.current || !proofRef.current) {
             throw new Error("ZKPassport not initialized or proof not generated")
           }
@@ -217,16 +206,8 @@ export default function RegistrationPage() {
           // Verify that committedInputs is present and not empty
           // For compressed-evm mode with binding, committedInputs should contain the binding data
           if (!verifierParams.committedInputs || verifierParams.committedInputs.length === 0) {
-            throw new Error("Committed inputs are missing or empty. Binding may not have been applied correctly.")
+            throw new Error("Committed inputs are missing or empty.")
           }
-          
-          console.log("Committed inputs length:", verifierParams.committedInputs.length)
-          console.log("Committed inputs preview:", verifierParams.committedInputs.slice(0, 200))
-
-          console.log("Verifier parameters:", verifierParams)
-          console.log("Service config:", verifierParams.serviceConfig)
-          console.log("Domain:", verifierParams.serviceConfig?.domain)
-          console.log("Scope:", verifierParams.serviceConfig?.scope)
 
           // Register on-chain
           setCurrentStep("registering")
@@ -235,7 +216,7 @@ export default function RegistrationPage() {
           const txHash = await registerToAuction(
             auctionId,
             verifierParams as unknown as ProofVerificationParams,
-            false // isIDCard
+            false 
           )
 
           setRegisterTxHash(txHash)
@@ -357,7 +338,7 @@ export default function RegistrationPage() {
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-3">Connect Your Wallet</h3>
                 <p className="text-gray-600 mb-6 text-sm max-w-md mx-auto">
-                  Connect your MetaMask wallet to start the registration process
+                  Connect your wallet to start the registration process
                 </p>
                 <Button 
                   onClick={handleConnectWallet} 
@@ -372,7 +353,7 @@ export default function RegistrationPage() {
                   ) : (
                     <>
                       <Wallet className="mr-2 h-4 w-4" />
-                      Connect MetaMask
+                      Connect Wallet
                     </>
                   )}
                 </Button>
@@ -468,7 +449,7 @@ export default function RegistrationPage() {
                 <p className="text-gray-600 mb-8 text-lg">
                   {registerTxHash
                     ? "Transaction submitted! Waiting for confirmation..."
-                    : "Please confirm the transaction in MetaMask..."}
+                    : "Please confirm the transaction in your wallet..."}
                 </p>
                 
                 {registerTxHash && (

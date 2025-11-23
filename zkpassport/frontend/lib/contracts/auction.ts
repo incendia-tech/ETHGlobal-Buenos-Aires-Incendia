@@ -184,7 +184,6 @@ export async function checkRegistration(contractAddress: string, userAddress: st
   console.log(`[checkRegistration] Checking registration for ${userAddress} on contract ${contractAddress}`)
 
   try {
-    // Call userIdentifiers mapping
     const functionData = encodeFunctionData({
       abi: AUCTION_ABI,
       functionName: 'userIdentifiers',
@@ -292,7 +291,6 @@ export async function registerToAuction(
       }
     }
 
-    // First, try to simulate the transaction to get revert reason
     try {
       const functionData = encodeFunctionData({
         abi: AUCTION_ABI,
@@ -323,10 +321,8 @@ export async function registerToAuction(
         dataKeys: simError.data ? Object.keys(simError.data) : null,
       })
       
-      // Log the actual data object structure
       if (simError.data && typeof simError.data === 'object') {
         console.error("[registerToAuction] Data object contents:", JSON.stringify(simError.data, null, 2))
-        // Log each key-value pair
         for (const [key, value] of Object.entries(simError.data)) {
           if (key === 'originalError' && typeof value === 'object' && value !== null) {
             console.error(`[registerToAuction] data.${key}:`, {
@@ -344,7 +340,6 @@ export async function registerToAuction(
       let errorMessage = "Transaction would fail"
       let revertReason: string | null = null
       
-      // Method 1: Check the nested originalError.data (Tenderly format)
       if (simError.data?.originalError?.data) {
         const hexData = simError.data.originalError.data
         if (typeof hexData === 'string' && hexData.startsWith('0x')) {
@@ -387,103 +382,13 @@ export async function registerToAuction(
         }
       }
       
-      // Method 2: Check other possible locations in data object
-      if (!revertReason && simError.data && typeof simError.data === 'object') {
-        const data = simError.data
-        
-        // Check all possible nested fields
-        const possibleDataFields = [
-          data.data,
-          data.error,
-          data.revert,
-          data.revertReason,
-          data.message,
-          data.details,
-          data.result,
-          data.reason
-        ]
-        
-        for (const field of possibleDataFields) {
-          if (!field) continue
-          
-          // If it's a hex string, try to decode it
-          if (typeof field === 'string' && field.startsWith('0x')) {
-            try {
-              const decoded = decodeErrorResult({
-                abi: AUCTION_ABI,
-                data: field as `0x${string}`
-              })
-              revertReason = decoded.errorName
-              if (decoded.args && decoded.args.length > 0) {
-                revertReason += `: ${decoded.args[0]}`
-              }
-              break
-            } catch (e) {
-              // Manual parsing fallback for Error(string)
-              if (field.startsWith('0x08c379a0')) {
-                try {
-                  const lengthHex = field.slice(74, 138)
-                  const length = parseInt(lengthHex, 16) * 2
-                  const reasonHex = field.slice(138, 138 + length)
-                  const reason = Buffer.from(reasonHex, 'hex').toString('utf8').replace(/\0/g, '').trim()
-                  if (reason && reason.length > 0) {
-                    revertReason = reason
-                    break
-                  }
-                } catch (parseError) {
-                  // Ignore
-                }
-              }
-            }
-          }
-        }
-      }
-      
-      // Method 3: Parse the error message more carefully
-      if (!revertReason && simError.message) {
-        const message = simError.message
-        
-        // Split by newlines and look for the actual revert reason
-        const lines = message.split('\n')
-        for (const line of lines) {
-          // Skip lines with version info, URLs, etc.
-          if (line.includes('viem@') || 
-              line.includes('Version:') || 
-              line.includes('URL:') ||
-              line.includes('RPC Request failed') ||
-              line.includes('Request body:')) {
-            continue
-          }
-          
-          // Look for revert reason patterns
-          const revertMatch = line.match(/execution reverted[:\s]+(.+)/i)
-          if (revertMatch && revertMatch[1]) {
-            const candidate = revertMatch[1].trim()
-            // Make sure it's not just version info
-            if (!candidate.includes('viem@') && candidate.length > 0) {
-              revertReason = candidate
-              break
-            }
-          }
-        }
-      }
-      
-      // Set final error message
       if (revertReason) {
         errorMessage = `Transaction would fail: ${revertReason}`
         console.error("[registerToAuction] Extracted revert reason:", revertReason)
       } else {
-        // Fallback: use a generic message but log the full error for debugging
-        errorMessage = "Transaction would fail: execution reverted (check console for details)"
         console.error("[registerToAuction] Could not extract revert reason")
-        console.error("[registerToAuction] Full error for debugging:", {
-          message: simError.message,
-          data: simError.data,
-          stack: simError.stack
-        })
       }
       
-      console.error("[registerToAuction] Final error message:", errorMessage)
       throw new Error(errorMessage)
     }
 
