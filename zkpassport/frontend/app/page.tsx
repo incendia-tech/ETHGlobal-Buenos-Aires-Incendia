@@ -44,8 +44,8 @@ export default function LandingPage() {
                 <Flame className="h-3 w-3 text-white" />
               </div>
               <span className="text-sm font-semibold text-orange-900">ZKPassport • Private Bidding • Proof-of-Burn</span>
-        </div>
-
+            </div>
+            
             <h1 className="text-6xl md:text-7xl lg:text-8xl font-extrabold text-gray-900 mb-6 leading-[1.1] tracking-tight">
               Private Bidding with
               <br />
@@ -60,6 +60,7 @@ export default function LandingPage() {
               and everything is secured on-chain.
             </p>
 
+            {/* Key Features Highlight */}
 
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
