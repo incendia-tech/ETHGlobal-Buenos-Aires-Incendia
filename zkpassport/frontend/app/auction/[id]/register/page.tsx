@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, Wallet, Loader2, CheckCircle2, QrCode, ExternalLink } from "lucide-react"
 import Link from "next/link"
-import { getMetaMaskProvider, connectWallet, getConnectedAccount } from "@/lib/ethereum/wallet"
+import { getRabbyProvider, connectWallet, getConnectedAccount } from "@/lib/ethereum/wallet"
 import { registerToAuction, checkRegistration, type ProofVerificationParams } from "@/lib/contracts/auction"
 
 type RegistrationStep = "connect" | "verify" | "registering" | "success" | "error"
@@ -47,7 +47,7 @@ export default function RegistrationPage() {
   }
 
   const getNetworkName = async () => {
-    const provider = await getMetaMaskProvider()
+    const provider = await getRabbyProvider()
     if (provider) {
       try {
         const chainId = await provider.request({ method: "eth_chainId" })
@@ -86,19 +86,43 @@ export default function RegistrationPage() {
     setVerificationStatus("initiating")
 
     try {
+      // Get wallet address and chain ID BEFORE creating the request
+      const account = await getConnectedAccount()
+      if (!account) {
+        throw new Error("Please connect your wallet first")
+      }
+
+      const provider = await getRabbyProvider()
+      if (!provider) {
+        throw new Error("Rabby not connected")
+      }
+
+      // Get current chain ID
+      const chainIdHex = await provider.request({ method: "eth_chainId" })
+      const chainId = BigInt(chainIdHex)
+
+      console.log("Binding proof to:", {
+        senderAddress: account,
+        chainId: chainId.toString(),
+        chainIdHex: chainIdHex
+      })
+
       // Initialize the ZKPassport SDK
       // Note: The domain must match what's checked in the contract (Auction.sol line 99)
       if (!zkpassportRef.current) {
         zkpassportRef.current = new ZKPassport("localhost")
       }
 
-      // Create a verification request
+      // Create a verification request with binding for compressed-evm mode
+      // For compressed-evm mode, binding MUST be passed when creating the request
+      // This ensures the binding data is included in the proof generation
       const query = await zkpassportRef.current.request({
         name: "Incendia Auction",
         logo: "https://yourapp.com/logo.png",
         purpose: "Register for auction participation",
+        scope: "my-scope",
         mode: "compressed-evm",
-        devMode: true,
+        devMode: true
       })
 
       // Build your verification query - verify the user is 18+ and disclose nationality
@@ -111,7 +135,13 @@ export default function RegistrationPage() {
         onResult,
         onReject,
         onError,
-      } = query.gte("age", 18).disclose("nationality").done()
+      } = query.gte("age", 18).disclose("nationality")  // Bind the user's address to the proof
+      .bind("user_address", account as `0x${string}`)
+      // Bind to the chain where the proof will be verified
+      // This is strongly typed to the networks we support and plan to support in the near future
+      .bind("chain", "ethereum_sepolia").done()
+
+      console.log("account as `0x${string}:", account as `0x${string}`)
 
       // Save the URL and requestId
       setVerificationUrl(url)
@@ -150,12 +180,27 @@ export default function RegistrationPage() {
             throw new Error("ZKPassport not initialized or proof not generated")
           }
 
+          // Get solidity verifier parameters
+          // Binding was already done when creating the request above,
+          // so it should be included in the committed inputs automatically
           const verifierParams = zkpassportRef.current.getSolidityVerifierParameters({
             proof: proofRef.current,
-            devMode: true
+            devMode: true,
           })
+          
+          // Verify that committedInputs is present and not empty
+          // For compressed-evm mode with binding, committedInputs should contain the binding data
+          if (!verifierParams.committedInputs || verifierParams.committedInputs.length === 0) {
+            throw new Error("Committed inputs are missing or empty. Binding may not have been applied correctly.")
+          }
+          
+          console.log("Committed inputs length:", verifierParams.committedInputs.length)
+          console.log("Committed inputs preview:", verifierParams.committedInputs.slice(0, 200))
 
           console.log("Verifier parameters:", verifierParams)
+          console.log("Service config:", verifierParams.serviceConfig)
+          console.log("Domain:", verifierParams.serviceConfig?.domain)
+          console.log("Scope:", verifierParams.serviceConfig?.scope)
 
           // Register on-chain
           setCurrentStep("registering")

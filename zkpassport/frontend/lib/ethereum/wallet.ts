@@ -1,6 +1,7 @@
-// MetaMask wallet connection utilities
+// Rabby wallet connection utilities
 
 export interface EthereumProvider {
+  isRabby?: boolean
   isMetaMask?: boolean
   isTrust?: boolean
   providers?: EthereumProvider[]
@@ -16,7 +17,7 @@ declare global {
 }
 
 // EIP-6963 wallet detection
-async function detectMetaMaskViaEIP6963(): Promise<EthereumProvider | null> {
+async function detectRabbyViaEIP6963(): Promise<EthereumProvider | null> {
   return new Promise((resolve) => {
     if (typeof window === "undefined") {
       resolve(null)
@@ -26,7 +27,7 @@ async function detectMetaMaskViaEIP6963(): Promise<EthereumProvider | null> {
     let found = false
     const handler = (event: Event) => {
       const customEvent = event as CustomEvent
-      if (customEvent.detail?.info?.name === "MetaMask" && !found) {
+      if (customEvent.detail?.info?.name === "Rabby" && !found) {
         found = true
         window.removeEventListener("eip6963:announceProvider", handler as EventListener)
         resolve(customEvent.detail.provider)
@@ -48,36 +49,41 @@ async function detectMetaMaskViaEIP6963(): Promise<EthereumProvider | null> {
   })
 }
 
-export async function getMetaMaskProvider(): Promise<EthereumProvider | null> {
+export async function getRabbyProvider(): Promise<EthereumProvider | null> {
   if (typeof window === "undefined" || !window.ethereum) {
     return null
   }
 
   // Try EIP-6963 first (best practice for multiple wallets)
-  const provider = await detectMetaMaskViaEIP6963()
+  const provider = await detectRabbyViaEIP6963()
   if (provider) return provider
 
   // Fallback: Check providers array
   if (Array.isArray(window.ethereum)) {
-    const metamask = window.ethereum.find((p: EthereumProvider) => p.isMetaMask && !p.isTrust)
-    if (metamask) return metamask
+    const rabby = window.ethereum.find((p: EthereumProvider) => p.isRabby)
+    if (rabby) return rabby
   } else if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
-    const metamask = window.ethereum.providers.find((p: EthereumProvider) => p.isMetaMask && !p.isTrust)
-    if (metamask) return metamask
+    const rabby = window.ethereum.providers.find((p: EthereumProvider) => p.isRabby)
+    if (rabby) return rabby
   }
 
-  // Last resort: Check if window.ethereum is MetaMask
-  if (!Array.isArray(window.ethereum) && window.ethereum.isMetaMask && !window.ethereum.isTrust) {
+  // Last resort: Check if window.ethereum is Rabby
+  if (!Array.isArray(window.ethereum) && window.ethereum.isRabby) {
     return window.ethereum
   }
 
   return null
 }
 
+// Legacy function name for backward compatibility
+export async function getMetaMaskProvider(): Promise<EthereumProvider | null> {
+  return getRabbyProvider()
+}
+
 export async function connectWallet(): Promise<{ provider: EthereumProvider; account: string }> {
-  const provider = await getMetaMaskProvider()
+  const provider = await getRabbyProvider()
   if (!provider) {
-    throw new Error("MetaMask not found. Please install MetaMask.")
+    throw new Error("Rabby not found. Please install Rabby wallet.")
   }
 
   try {
@@ -96,7 +102,7 @@ export async function connectWallet(): Promise<{ provider: EthereumProvider; acc
 }
 
 export async function getConnectedAccount(): Promise<string | null> {
-  const provider = await getMetaMaskProvider()
+  const provider = await getRabbyProvider()
   if (!provider) return null
 
   try {

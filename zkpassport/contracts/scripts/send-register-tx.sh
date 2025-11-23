@@ -5,7 +5,7 @@
 
 set -e
 
-AUCTION_ADDRESS="0x86365C9dD22Ef6458Ae1ab5E057D653c747fAd52"
+AUCTION_ADDRESS="0x94765117D62A0ca58CFD2c48cB3BC1ee7ed9DA1f"
 
 # Get parameters
 RPC_URL="${1:-${SEPOLIA_RPC_URL:-https://ethereum-sepolia-rpc.publicnode.com}}"

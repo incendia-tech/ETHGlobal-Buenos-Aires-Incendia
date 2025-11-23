@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Flame, Clock, Wallet, CheckCircle2, Loader2, ExternalLink, Upload } from "lucide-react"
 import Link from "next/link"
-import { getMetaMaskProvider, connectWallet as connectMetaMask, getConnectedAccount } from "@/lib/ethereum/wallet"
+import { getRabbyProvider, connectWallet, getConnectedAccount } from "@/lib/ethereum/wallet"
 import { sendTransaction, waitForTransaction } from "@/lib/ethereum/transactions"
 import { submitBidToContract, parseGroth16Proof, type Groth16Proof, checkRegistration } from "@/lib/contracts/auction"
 import { parseEther } from "viem"
@@ -57,6 +57,13 @@ export default function AuctionPage() {
       loadAuctionDetails(auctionId)
     }
   }, [params.id])
+
+  useEffect(() => {
+    // Check wallet connection when contract address is set
+    if (contractAddress) {
+      checkWalletConnection()
+    }
+  }, [contractAddress])
 
   const loadAuctionDetails = async (auctionAddress: string) => {
     try {
@@ -104,25 +111,34 @@ export default function AuctionPage() {
       setWalletConnected(true)
       await getNetworkName()
       
+      // Ensure contract address is set
+      if (!contractAddress) {
+        console.log("Contract address not set yet, skipping registration check")
+        return
+      }
+      
       // Check if user is registered
       try {
         const isRegistered = await checkRegistration(contractAddress, account)
         if (!isRegistered) {
           // Redirect to registration page
+          console.log("User not registered, redirecting to registration page")
           router.push(`/auction/${contractAddress}/register`)
           return
         }
+        console.log("User is registered, proceeding to input step")
         setCurrentStep("input")
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error checking registration:", error)
-        // If check fails, still allow proceeding (maybe the contract isn't deployed yet)
-        setCurrentStep("input")
+        // If check fails, assume user is not registered and redirect
+        console.log("Registration check failed, redirecting to registration page")
+        router.push(`/auction/${contractAddress}/register`)
       }
     }
   }
 
   const getNetworkName = async () => {
-    const provider = await getMetaMaskProvider()
+    const provider = await getRabbyProvider()
     if (provider) {
       try {
         const chainId = await provider.request({ method: "eth_chainId" })
@@ -143,28 +159,39 @@ export default function AuctionPage() {
     setIsProcessing(true)
     setError("")
     try {
-      const { account } = await connectMetaMask()
+      const { account } = await connectWallet()
       setWalletAddress(account)
       setWalletConnected(true)
       await getNetworkName()
+      
+      // Ensure contract address is set
+      if (!contractAddress) {
+        console.error("Contract address not set")
+        setError("Contract address not found")
+        return
+      }
       
       // Check if user is registered
       try {
         const isRegistered = await checkRegistration(contractAddress, account)
         if (!isRegistered) {
           // Redirect to registration page
+          console.log("User not registered, redirecting to registration page")
           router.push(`/auction/${contractAddress}/register`)
           return
         }
+        console.log("User is registered, proceeding to input step")
         setCurrentStep("input")
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error checking registration:", error)
-        // If check fails, still allow proceeding (maybe the contract isn't deployed yet)
-        setCurrentStep("input")
+        // If check fails, assume user is not registered and redirect
+        // This is safer than allowing unregistered users to proceed
+        console.log("Registration check failed, redirecting to registration page")
+        router.push(`/auction/${contractAddress}/register`)
       }
     } catch (error: any) {
       console.error("Failed to connect wallet:", error)
-      setError(error.message || "Failed to connect to MetaMask")
+      setError(error.message || "Failed to connect to Rabby")
     } finally {
       setIsProcessing(false)
     }
@@ -304,7 +331,7 @@ export default function AuctionPage() {
         bidAmountWei
       })
       
-      // Submit bid transaction directly via MetaMask
+      // Submit bid transaction directly via Rabby
       const txHash = await submitBidToContract(
         contractAddress,
         parsedProof,
@@ -390,7 +417,7 @@ export default function AuctionPage() {
                 onClick={handleConnectWallet}
                 className="text-xs text-white bg-orange-600 hover:bg-orange-700 px-3 py-1.5 rounded-md font-medium transition-colors shadow-sm"
               >
-                Connect MetaMask
+                Connect Rabby
               </button>
             )}
           </div>
@@ -546,7 +573,7 @@ export default function AuctionPage() {
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-3">Connect Your Wallet</h3>
                   <p className="text-gray-600 mb-6 text-sm max-w-md mx-auto">
-                    Connect your MetaMask wallet to participate in this proof-of-burn auction
+                    Connect your Rabby wallet to participate in this proof-of-burn auction
                   </p>
                   <button 
                     className="bg-gradient-to-r from-orange-600 to-orange-700 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" 
@@ -561,7 +588,7 @@ export default function AuctionPage() {
                     ) : (
                       <>
                         <Wallet className="mr-2 h-4 w-4 inline" />
-                        Connect MetaMask
+                        Connect Rabby
                       </>
                     )}
                   </button>
@@ -674,7 +701,7 @@ export default function AuctionPage() {
                   <p className="text-gray-600 mb-8 text-lg">
                     {burnTxHash
                       ? "Transaction submitted! Waiting for confirmation..."
-                      : "Please confirm the transaction in MetaMask..."}
+                      : "Please confirm the transaction in Rabby..."}
                   </p>
                   
                   {burnTxHash && (
@@ -771,9 +798,9 @@ export default function AuctionPage() {
                 <div className="space-y-6">
                   <div className="text-center py-4">
                     <CheckCircle2 className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready to Submit via MetaMask</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready to Submit via Rabby</h3>
                     <p className="text-gray-600">
-                      Proof data loaded from data folder! Submit your bid transaction through MetaMask.
+                      Proof data loaded from data folder! Submit your bid transaction through Rabby.
                     </p>
                   </div>
 
@@ -845,10 +872,10 @@ export default function AuctionPage() {
                     {isProcessing ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />
-                        {proofSubmissionStatus === 'loading' ? 'Submitting via MetaMask...' : 'Submitting via MetaMask...'}
+                        {proofSubmissionStatus === 'loading' ? 'Submitting via Rabby...' : 'Submitting via Rabby...'}
                       </>
                     ) : (
-                      "Submit Bid via MetaMask"
+                      "Submit Bid via Rabby"
                     )}
                   </button>
 
@@ -867,7 +894,7 @@ export default function AuctionPage() {
                     <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">Bid Submitted Successfully!</h3>
                     <p className="text-gray-600">
-                      Your bid has been successfully submitted to the auction contract via MetaMask. 
+                      Your bid has been successfully submitted to the auction contract via Rabby. 
                       The proof data was automatically loaded from the data folder and submitted directly through your wallet.
                     </p>
                   </div>
@@ -950,7 +977,7 @@ export default function AuctionPage() {
                     How it works
                   </h4>
                   <ol className="text-sm text-gray-700 space-y-2 list-decimal list-inside">
-                    <li className="font-medium">Connect your MetaMask wallet</li>
+                    <li className="font-medium">Connect your Rabby wallet</li>
                     <li className="font-medium">Enter burn and bid amounts</li>
                     <li className="font-medium">Sign burn transaction (proof)</li>
                     <li className="font-medium">Wait for network confirmation</li>

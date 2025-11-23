@@ -2,7 +2,7 @@
 
 ## Overview
 
-The frontend automatically loads proof data from the `data` folder and submits it directly via MetaMask, giving users full control over their transactions in proof-of-burn auctions.
+The frontend automatically loads proof data from the `data` folder and submits it directly via Rabby, giving users full control over their transactions in proof-of-burn auctions.
 
 ## How It Works
 
@@ -11,8 +11,8 @@ The frontend automatically loads proof data from the `data` folder and submits i
 - No manual input required from the user
 - Proof data is validated and converted to the correct format for Solidity
 
-### 2. MetaMask Transaction Submission
-- **Method**: Direct MetaMask transaction
+### 2. Rabby Transaction Submission
+- **Method**: Direct Rabby transaction
 - **Purpose**: Users submit proofs directly through their wallet
 - **Control**: Full user control over transaction parameters
 
@@ -23,24 +23,24 @@ The frontend automatically loads proof data from the `data` folder and submits i
 
 ## User Flow
 
-1. **Connect Wallet** → User connects MetaMask
+1. **Connect Wallet** → User connects Rabby
 2. **Enter Bid Details** → User enters burn amount and bid amount
-3. **Execute Burn** → User sends ETH to calculated burn address via MetaMask
+3. **Execute Burn** → User sends ETH to calculated burn address via Rabby
 4. **Auto-Load Proof** → System automatically loads proof data from data folder
-5. **Submit via MetaMask** → User clicks "Submit Bid via MetaMask"
-6. **MetaMask Confirmation** → MetaMask popup appears for transaction confirmation
+5. **Submit via Rabby** → User clicks "Submit Bid via Rabby"
+6. **Rabby Confirmation** → Rabby popup appears for transaction confirmation
 7. **Transaction Success** → User confirms and transaction is submitted to contract
 
 ## Files Modified
 
-- `app/auction/[id]/page.tsx` - Updated auction page with automatic proof loading and MetaMask submission
+- `app/auction/[id]/page.tsx` - Updated auction page with automatic proof loading and Rabby submission
 - `lib/proof-loader.ts` - Utility for loading proof data from data folder
-- `lib/contracts/auction.ts` - MetaMask transaction creation and submission
-- `lib/ethereum/transactions.ts` - MetaMask transaction utilities
+- `lib/contracts/auction.ts` - Rabby transaction creation and submission
+- `lib/ethereum/transactions.ts` - Rabby transaction utilities
 
 ## Benefits
 
-- **User Control**: All transactions go through MetaMask (no private keys needed)
+- **User Control**: All transactions go through Rabby (no private keys needed)
 - **Streamlined UX**: No manual proof data entry required
 - **Error Reduction**: Automatic validation and format conversion
 - **Consistency**: Uses the same proof data for all submissions
@@ -60,7 +60,7 @@ interface ProofData {
 }
 ```
 
-### MetaMask Transaction Format
+### Rabby Transaction Format
 ```javascript
 {
   from: "0x...", // User's wallet address
@@ -86,7 +86,7 @@ submitBid(
 
 The UI shows real-time status updates:
 - `idle` - Ready to submit
-- `loading` - Submitting via MetaMask
+- `loading` - Submitting via Rabby
 - `success` - Transaction confirmed
 - `error` - Transaction failed
 

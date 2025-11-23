@@ -96,7 +96,7 @@ contract Auction {
         require(verified, "Proof is invalid");
 
         require(
-          helper.verifyScopes(params.proofVerificationData.publicInputs, "your-domain.com", "my-scope"),
+          helper.verifyScopes(params.proofVerificationData.publicInputs, params.serviceConfig.domain, params.serviceConfig.scope),
           "Invalid scope"
         );
 
@@ -110,7 +110,8 @@ contract Auction {
           params.committedInputs,
           isIDCard
         );
-        string memory nationality = disclosedData.nationality;
+        // nationality is available in disclosedData if needed for future checks
+        // string memory nationality = disclosedData.nationality;
 
         BoundData memory boundData = helper.getBoundData(params.committedInputs);
         require(boundData.senderAddress == msg.sender, "Not the expected sender");

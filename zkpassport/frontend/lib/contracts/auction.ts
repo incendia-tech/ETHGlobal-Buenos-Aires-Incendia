@@ -3,8 +3,8 @@
 import type { ProofData } from "./auction-abi"
 import { AUCTION_ABI } from "./auction-abi"
 import { sendTransaction, waitForTransaction, encodeUint256, encodeUint256Array } from "../ethereum/transactions"
-import { encodeFunctionData } from "viem"
-import { getMetaMaskProvider, getConnectedAccount } from "../ethereum/wallet"
+import { encodeFunctionData, decodeErrorResult } from "viem"
+import { getRabbyProvider, getConnectedAccount } from "../ethereum/wallet"
 
 // Auction contract ABI for submitBid function only (for backward compatibility)
 const SUBMIT_BID_ABI = [
@@ -176,10 +176,12 @@ export interface ProofVerificationParams {
  * Check if a user is registered in the auction contract
  */
 export async function checkRegistration(contractAddress: string, userAddress: string): Promise<boolean> {
-  const provider = await getMetaMaskProvider()
+  const provider = await getRabbyProvider()
   if (!provider) {
-    throw new Error("MetaMask not connected")
+    throw new Error("Rabby not connected")
   }
+
+  console.log(`[checkRegistration] Checking registration for ${userAddress} on contract ${contractAddress}`)
 
   try {
     // Call userIdentifiers mapping
@@ -200,11 +202,15 @@ export async function checkRegistration(contractAddress: string, userAddress: st
       ]
     })
 
+    console.log(`[checkRegistration] userIdentifiers result:`, result)
+
     // If result is not 0x0000...000, user is registered
     const identifier = BigInt(result || "0x0")
-    return identifier !== BigInt(0)
+    const isRegistered = identifier !== BigInt(0)
+    console.log(`[checkRegistration] User registered: ${isRegistered}, identifier: ${identifier.toString()}`)
+    return isRegistered
   } catch (error: any) {
-    console.error("Error checking registration via userIdentifiers:", error)
+    console.error("[checkRegistration] Error checking registration via userIdentifiers:", error)
     // If the call reverts, try using IsRegistered view function
     try {
       const isRegisteredData = encodeFunctionData({
@@ -223,8 +229,10 @@ export async function checkRegistration(contractAddress: string, userAddress: st
           "latest"
         ]
       })
+      console.log("[checkRegistration] IsRegistered check passed, user is registered")
       return true
-    } catch {
+    } catch (fallbackError: any) {
+      console.log("[checkRegistration] IsRegistered check also failed, user is not registered:", fallbackError)
       return false
     }
   }
@@ -239,15 +247,33 @@ export async function registerToAuction(
   isIDCard: boolean = false
 ): Promise<string> {
   try {
-    const provider = await getMetaMaskProvider()
+    const provider = await getRabbyProvider()
     if (!provider) {
-      throw new Error("MetaMask not connected")
+      throw new Error("Rabby not connected")
     }
 
     const account = await getConnectedAccount()
     if (!account) {
       throw new Error("No connected account")
     }
+
+    console.log("[registerToAuction] Register params:", {
+      domain: params.serviceConfig.domain,
+      scope: params.serviceConfig.scope,
+      devMode: params.serviceConfig.devMode,
+      publicInputsLength: params.proofVerificationData.publicInputs?.length,
+      publicInputs: params.proofVerificationData.publicInputs,
+      account: account,
+      contractAddress: contractAddress
+    })
+    
+    // Ensure scope is set - if empty, use "my-scope" as fallback (matches frontend query)
+    const scope = params.serviceConfig.scope || "my-scope"
+    console.log("[registerToAuction] Using scope:", scope)
+    
+    // Log the account and contract for debugging
+    console.log("[registerToAuction] Account:", account)
+    console.log("[registerToAuction] Contract:", contractAddress)
 
     // Convert params to proper format for encoding
     const registerParams = {
@@ -261,9 +287,204 @@ export async function registerToAuction(
       serviceConfig: {
         validityPeriodInSeconds: params.serviceConfig.validityPeriodInSeconds,
         domain: params.serviceConfig.domain,
-        scope: params.serviceConfig.scope,
+        scope: scope,
         devMode: params.serviceConfig.devMode
       }
+    }
+
+    // First, try to simulate the transaction to get revert reason
+    try {
+      const functionData = encodeFunctionData({
+        abi: AUCTION_ABI,
+        functionName: 'register',
+        args: [registerParams, isIDCard]
+      })
+
+      // Simulate the transaction
+      const accounts = await provider.request({ method: "eth_accounts" })
+      await provider.request({
+        method: "eth_call",
+        params: [
+          {
+            from: accounts[0],
+            to: contractAddress,
+            data: functionData
+          },
+          "latest"
+        ]
+      })
+    } catch (simError: any) {
+      console.error("[registerToAuction] Simulation error:", simError)
+      console.error("[registerToAuction] Error structure:", {
+        code: simError.code,
+        message: simError.message,
+        data: simError.data,
+        dataType: typeof simError.data,
+        dataKeys: simError.data ? Object.keys(simError.data) : null,
+      })
+      
+      // Log the actual data object structure
+      if (simError.data && typeof simError.data === 'object') {
+        console.error("[registerToAuction] Data object contents:", JSON.stringify(simError.data, null, 2))
+        // Log each key-value pair
+        for (const [key, value] of Object.entries(simError.data)) {
+          if (key === 'originalError' && typeof value === 'object' && value !== null) {
+            console.error(`[registerToAuction] data.${key}:`, {
+              message: (value as any).message?.slice(0, 200),
+              code: (value as any).code,
+              data: typeof (value as any).data === 'string' ? (value as any).data.slice(0, 200) : (value as any).data
+            })
+          } else {
+            console.error(`[registerToAuction] data.${key}:`, typeof value === 'string' ? value.slice(0, 200) : value)
+          }
+        }
+      }
+      
+      // Try to extract revert reason from error
+      let errorMessage = "Transaction would fail"
+      let revertReason: string | null = null
+      
+      // Method 1: Check the nested originalError.data (Tenderly format)
+      if (simError.data?.originalError?.data) {
+        const hexData = simError.data.originalError.data
+        if (typeof hexData === 'string' && hexData.startsWith('0x')) {
+          console.error("[registerToAuction] Found hex data in originalError.data:", hexData.slice(0, 100) + "...")
+          
+          // Try to decode using viem's decodeErrorResult first
+          try {
+            const decoded = decodeErrorResult({
+              abi: AUCTION_ABI,
+              data: hexData as `0x${string}`
+            })
+            revertReason = decoded.errorName
+            if (decoded.args && decoded.args.length > 0) {
+              revertReason += `: ${decoded.args[0]}`
+            }
+            console.error("[registerToAuction] Successfully decoded error:", revertReason)
+          } catch (decodeError) {
+            // If decodeErrorResult fails, try manual parsing for Error(string)
+            if (hexData.startsWith('0x08c379a0')) {
+              try {
+                // Format: 0x08c379a0 (selector) + offset (32 bytes) + length (32 bytes) + string (padded)
+                // Skip selector (10 chars), get offset (64 chars), get length (64 chars)
+                const offsetHex = hexData.slice(10, 74) // Skip selector, get offset
+                const lengthHex = hexData.slice(74, 138) // Get length
+                const length = parseInt(lengthHex, 16) * 2 // Convert bytes to hex chars
+                
+                // Extract the string (skip selector + offset + length = 138 chars)
+                const reasonHex = hexData.slice(138, 138 + length)
+                const reason = Buffer.from(reasonHex, 'hex').toString('utf8').replace(/\0/g, '').trim()
+                
+                if (reason && reason.length > 0) {
+                  revertReason = reason
+                  console.error("[registerToAuction] Successfully parsed revert reason:", revertReason)
+                }
+              } catch (parseError) {
+                console.error("[registerToAuction] Failed to parse revert reason:", parseError)
+              }
+            }
+          }
+        }
+      }
+      
+      // Method 2: Check other possible locations in data object
+      if (!revertReason && simError.data && typeof simError.data === 'object') {
+        const data = simError.data
+        
+        // Check all possible nested fields
+        const possibleDataFields = [
+          data.data,
+          data.error,
+          data.revert,
+          data.revertReason,
+          data.message,
+          data.details,
+          data.result,
+          data.reason
+        ]
+        
+        for (const field of possibleDataFields) {
+          if (!field) continue
+          
+          // If it's a hex string, try to decode it
+          if (typeof field === 'string' && field.startsWith('0x')) {
+            try {
+              const decoded = decodeErrorResult({
+                abi: AUCTION_ABI,
+                data: field as `0x${string}`
+              })
+              revertReason = decoded.errorName
+              if (decoded.args && decoded.args.length > 0) {
+                revertReason += `: ${decoded.args[0]}`
+              }
+              break
+            } catch (e) {
+              // Manual parsing fallback for Error(string)
+              if (field.startsWith('0x08c379a0')) {
+                try {
+                  const lengthHex = field.slice(74, 138)
+                  const length = parseInt(lengthHex, 16) * 2
+                  const reasonHex = field.slice(138, 138 + length)
+                  const reason = Buffer.from(reasonHex, 'hex').toString('utf8').replace(/\0/g, '').trim()
+                  if (reason && reason.length > 0) {
+                    revertReason = reason
+                    break
+                  }
+                } catch (parseError) {
+                  // Ignore
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Method 3: Parse the error message more carefully
+      if (!revertReason && simError.message) {
+        const message = simError.message
+        
+        // Split by newlines and look for the actual revert reason
+        const lines = message.split('\n')
+        for (const line of lines) {
+          // Skip lines with version info, URLs, etc.
+          if (line.includes('viem@') || 
+              line.includes('Version:') || 
+              line.includes('URL:') ||
+              line.includes('RPC Request failed') ||
+              line.includes('Request body:')) {
+            continue
+          }
+          
+          // Look for revert reason patterns
+          const revertMatch = line.match(/execution reverted[:\s]+(.+)/i)
+          if (revertMatch && revertMatch[1]) {
+            const candidate = revertMatch[1].trim()
+            // Make sure it's not just version info
+            if (!candidate.includes('viem@') && candidate.length > 0) {
+              revertReason = candidate
+              break
+            }
+          }
+        }
+      }
+      
+      // Set final error message
+      if (revertReason) {
+        errorMessage = `Transaction would fail: ${revertReason}`
+        console.error("[registerToAuction] Extracted revert reason:", revertReason)
+      } else {
+        // Fallback: use a generic message but log the full error for debugging
+        errorMessage = "Transaction would fail: execution reverted (check console for details)"
+        console.error("[registerToAuction] Could not extract revert reason")
+        console.error("[registerToAuction] Full error for debugging:", {
+          message: simError.message,
+          data: simError.data,
+          stack: simError.stack
+        })
+      }
+      
+      console.error("[registerToAuction] Final error message:", errorMessage)
+      throw new Error(errorMessage)
     }
 
     const functionData = encodeFunctionData({
@@ -277,6 +498,7 @@ export async function registerToAuction(
 
     return txHash
   } catch (error: any) {
+    console.error("[registerToAuction] Registration error:", error)
     throw new Error(`Registration failed: ${error.message || error}`)
   }
 }

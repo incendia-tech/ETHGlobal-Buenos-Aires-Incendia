@@ -5,7 +5,7 @@ A modern, full-featured frontend for the Incendia Zero-Knowledge Proof Auction s
 ## ✨ Features
 
 ### 🎯 **Core Auction Functionality**
-- **Wallet Integration**: Seamless MetaMask connection with EIP-6963 support
+- **Wallet Integration**: Seamless Rabby connection with EIP-6963 support
 - **Burn Transactions**: Execute proof-of-burn transactions for auction participation
 - **Proof Submission**: Automatic ZK proof loading and contract submission
 - **Real-time Status**: Live transaction tracking and confirmation
@@ -14,10 +14,10 @@ A modern, full-featured frontend for the Incendia Zero-Knowledge Proof Auction s
 - **Automatic Proof Loading**: Loads proof data from local JSON files
 - **Proof Format Conversion**: Converts Groth16 proofs for Solidity compatibility
 - **Public Signals Processing**: Handles 6-element public signal arrays
-- **MetaMask Submission**: Users submit proofs directly through MetaMask
+- **Rabby Submission**: Users submit proofs directly through Rabby
 
 ### 🚀 **Advanced Features**
-- **Direct MetaMask Integration**: Users control all transactions through their wallet
+- **Direct Rabby Integration**: Users control all transactions through their wallet
 - **Automatic Proof Loading**: Proof data loads from data folder automatically
 - **Real Contract Interaction**: Live transactions on Sepolia testnet
 - **Comprehensive Error Handling**: Detailed error messages and debugging
@@ -31,13 +31,13 @@ A modern, full-featured frontend for the Incendia Zero-Knowledge Proof Auction s
 - **Styling**: Tailwind CSS + Radix UI components
 - **Blockchain**: Viem for Ethereum interaction
 - **ZK Proofs**: Groth16 proof format support
-- **Wallet**: MetaMask integration with EIP-6963
+- **Wallet**: Rabby integration with EIP-6963
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+ 
-- MetaMask wallet
+- Rabby wallet
 - Sepolia testnet ETH
 - Environment variables configured (optional for contract reading)
 
@@ -76,27 +76,27 @@ VERIFIER_ADDRESS=0xf2becfbaa3be23a62932f2ec6889c7cf1a960029
 ### Getting Credentials
 
 1. **RPC URL**: Sign up at [Alchemy](https://alchemy.com/) or [Infura](https://infura.io/)
-2. **Private Key**: Export from MetaMask (Settings → Security → Export Private Key)
+2. **Private Key**: Export from Rabby (Settings → Security → Export Private Key)
 3. **Test ETH**: Get Sepolia ETH from [sepoliafaucet.com](https://sepoliafaucet.com/)
 
 ## 🎮 Usage
 
 ### 1. **Connect Wallet**
-- Click "Connect MetaMask" button
-- Approve connection in MetaMask
+- Click "Connect Rabby" button
+- Approve connection in Rabby
 - Switch to Sepolia testnet
 
 ### 2. **Execute Burn Transaction**
 - Enter burn amount (in ETH)
 - Enter bid amount (in ETH)
 - Click "Execute Burn Transaction"
-- Confirm transaction in MetaMask
+- Confirm transaction in Rabby
 
-### 3. **Submit Proof via MetaMask**
+### 3. **Submit Proof via Rabby**
 - Proof data loads automatically from `data/` folder
-- Click "Submit Bid via MetaMask"
-- MetaMask popup appears for transaction confirmation
-- Confirm transaction in MetaMask
+- Click "Submit Bid via Rabby"
+- Rabby popup appears for transaction confirmation
+- Confirm transaction in Rabby
 - View transaction hash and status
 
 ## 📁 Project Structure
@@ -144,16 +144,16 @@ npm run lint
 ## 🔄 Transaction Flow
 
 ### Complete User Flow
-1. **Connect Wallet**: User connects MetaMask to the application
-2. **Execute Burn Transaction**: User submits burn transaction via MetaMask
+1. **Connect Wallet**: User connects Rabby to the application
+2. **Execute Burn Transaction**: User submits burn transaction via Rabby
 3. **Load Proof Data**: System automatically loads proof data from `data/` folder
-4. **Submit Bid**: User clicks "Submit Bid via MetaMask"
-5. **MetaMask Confirmation**: MetaMask popup appears for transaction confirmation
+4. **Submit Bid**: User clicks "Submit Bid via Rabby"
+5. **Rabby Confirmation**: Rabby popup appears for transaction confirmation
 6. **Transaction Success**: User confirms and transaction is submitted to contract
 7. **Verification**: User can verify transaction on Etherscan
 
 ### Key Features
-- **User Control**: All transactions go through MetaMask (no private keys needed)
+- **User Control**: All transactions go through Rabby (no private keys needed)
 - **Automatic Loading**: Proof data loads automatically from local files
 - **Real Blockchain**: All transactions are real and verifiable on Sepolia
 - **Gas Optimization**: Proper gas limits for ZK proof verification (500,000 gas)
@@ -168,7 +168,7 @@ npm run lint
 - Restart development server after changes
 
 **"Failed to connect wallet"**
-- Check MetaMask is installed and unlocked
+- Check Rabby is installed and unlocked
 - Ensure you're on Sepolia testnet
 - Try refreshing the page
 
@@ -191,9 +191,9 @@ Enable detailed logging by checking browser console and server logs for transact
 
 ## 📚 API Reference
 
-### MetaMask Transaction Flow
+### Rabby Transaction Flow
 
-Users submit transactions directly through MetaMask, not via API.
+Users submit transactions directly through Rabby, not via API.
 
 **Transaction Parameters:**
 ```javascript

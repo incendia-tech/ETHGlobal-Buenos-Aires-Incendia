@@ -2,7 +2,7 @@
 
 ## Overview
 
-The frontend now supports direct contract interaction via MetaMask. Users submit transactions directly through their wallet, giving them full control over their transactions on Sepolia testnet.
+The frontend now supports direct contract interaction via Rabby. Users submit transactions directly through their wallet, giving them full control over their transactions on Sepolia testnet.
 
 ## Environment Variables
 
@@ -24,8 +24,8 @@ VERIFIER_ADDRESS=0xf2becfbaa3be23a62932f2ec6889c7cf1a960029
 - Create a new project
 - Copy the Sepolia RPC URL
 
-### 2. Connect MetaMask
-- Install MetaMask browser extension
+### 2. Connect Rabby
+- Install Rabby browser extension
 - Create a new wallet or use an existing one
 - Switch to Sepolia testnet
 - Fund the account with Sepolia ETH from a [faucet](https://sepoliafaucet.com/)
