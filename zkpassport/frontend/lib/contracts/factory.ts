@@ -269,7 +269,7 @@ export async function fetchDeployedAuctions(): Promise<DeployedAuction[]> {
     
     // Known auction addresses (since the salt approach is failing)
     const knownAddresses = [
-      "0x94765117D62A0ca58CFD2c48cB3BC1ee7ed9DA1f",
+      "0x32350FB0f5351380A07361A7a9887a0eA779bed2",
       "0xB7b475ED68bCf3e30578aF49277CB78aE5Ca8C5e", 
       "0x291842511Ac92e2Dc31d82073919Db8f00be3964",
       "0x6C16C0a19815591C880C026eC8239166CF313A30",
