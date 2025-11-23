@@ -1,244 +1,289 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Clock, Flame, Loader2 } from "lucide-react"
+import { Flame, Shield, Lock, Zap, ArrowRight, CheckCircle2, Sparkles, Eye, Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-import { fetchDeployedAuctions, getAuctionDetails, type DeployedAuction } from "@/lib/contracts/factory"
-
-const DEFAULT_AUCTION = "0x32350FB0f5351380A07361A7a9887a0eA779bed2"
-
-function formatTimeRemaining(timestamp: number) {
-  const now = Math.floor(Date.now() / 1000)
-  const diff = timestamp - now
-
-  if (diff <= 0) return "Ended"
-
-  const hours = Math.floor(diff / 3600)
-  const minutes = Math.floor((diff % 3600) / 60)
-
-  if (hours > 24) {
-    return `${Math.floor(hours / 24)}d ${hours % 24}h`
-  }
-  return `${hours}h ${minutes}m`
-}
-
-export default function HomePage() {
-  const [auctions, setAuctions] = useState<DeployedAuction[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    loadAuctions()
-  }, [])
-
-  async function loadAuctions() {
-    try {
-      setLoading(true)
-      setError(null)
-
-      let deployedAuctions = await fetchDeployedAuctions()
-
-      if (deployedAuctions.length === 0) {
-        console.log("[v0] No auctions from Factory, loading default auction:", DEFAULT_AUCTION)
-        const details = await getAuctionDetails(DEFAULT_AUCTION)
-        console.log("[v0] Default auction details:", details)
-        deployedAuctions = [
-          {
-            address: DEFAULT_AUCTION,
-            ceremonyType: 0,
-            blockNumber: 0,
-            transactionHash: "",
-            ...details,
-          },
-        ]
-        console.log("[v0] Created default auction object:", deployedAuctions[0])
-      }
-
-      // If still no auctions, add some mock data to ensure page displays
-      if (deployedAuctions.length === 0) {
-        console.log("[v0] Still no auctions, adding mock data")
-        deployedAuctions = [
-          {
-            address: "0x2671ae802180Fb8969A2A319Bc869EE5a4E2B5bF",
-            ceremonyId: 1,
-            biddingDeadline: Math.floor(Date.now() / 1000) + (4 * 24 * 3600) + (20 * 3600),
-            bidSubmissionDeadline: Math.floor(Date.now() / 1000) + (5 * 24 * 3600),
-            resultDeadline: Math.floor(Date.now() / 1000) + (6 * 24 * 3600),
-            ceremonyType: 0,
-            blockNumber: 0,
-            transactionHash: "",
-          },
-          {
-            address: "0xB7b475ED68bCf3e30578aF49277CB78aE5Ca8C5e",
-            ceremonyId: 2,
-            biddingDeadline: Math.floor(Date.now() / 1000) + (2 * 24 * 3600) + (20 * 3600),
-            bidSubmissionDeadline: Math.floor(Date.now() / 1000) + (3 * 24 * 3600),
-            resultDeadline: Math.floor(Date.now() / 1000) + (4 * 24 * 3600),
-            ceremonyType: 0,
-            blockNumber: 0,
-            transactionHash: "",
-          },
-          {
-            address: "0x291842511Ac92e2Dc31d82073919Db8f00be3964",
-            ceremonyId: 3,
-            biddingDeadline: Math.floor(Date.now() / 1000) + (20 * 3600) + (28 * 60),
-            bidSubmissionDeadline: Math.floor(Date.now() / 1000) + (21 * 3600),
-            resultDeadline: Math.floor(Date.now() / 1000) + (22 * 3600),
-            ceremonyType: 0,
-            blockNumber: 0,
-            transactionHash: "",
-          },
-          {
-            address: "0x6C16C0a19815591C880C026eC8239166CF313A30",
-            ceremonyId: 4,
-            biddingDeadline: Math.floor(Date.now() / 1000) - 3600,
-            bidSubmissionDeadline: Math.floor(Date.now() / 1000) - 1800,
-            resultDeadline: Math.floor(Date.now() / 1000) + 3600,
-            ceremonyType: 0,
-            blockNumber: 0,
-            transactionHash: "",
-          },
-          {
-            address: "0x88b0118882244B344A087c11c2fcD79F51f9a18A",
-            ceremonyId: 5,
-            biddingDeadline: Math.floor(Date.now() / 1000) - 7200,
-            bidSubmissionDeadline: Math.floor(Date.now() / 1000) - 5400,
-            resultDeadline: Math.floor(Date.now() / 1000) - 1800,
-            ceremonyType: 0,
-            blockNumber: 0,
-            transactionHash: "",
-          },
-          {
-            address: "0x0086Cfc7902287bB858Bda110a6653Bc0Eee65C1",
-            ceremonyId: 6,
-            biddingDeadline: Math.floor(Date.now() / 1000) + (3 * 24 * 3600) + (20 * 3600),
-            bidSubmissionDeadline: Math.floor(Date.now() / 1000) + (4 * 24 * 3600),
-            resultDeadline: Math.floor(Date.now() / 1000) + (5 * 24 * 3600),
-            ceremonyType: 0,
-            blockNumber: 0,
-            transactionHash: "",
-          },
-        ]
-      }
-
-      console.log("[v0] Loaded auctions:", deployedAuctions)
-      setAuctions(deployedAuctions)
-    } catch (err: any) {
-      console.error("[v0] Error loading auctions:", err)
-      setError(err.message || "Failed to load auctions")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50/30">
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
+      <header className="border-b border-gray-200/50 bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center">
-            <Flame className="h-6 w-6 text-gray-900" />
-            <h1 className="ml-2 text-xl font-semibold text-gray-900">Incendia</h1>
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/30 transition-all duration-300 group-hover:scale-105">
+                <Flame className="h-5 w-5 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                Incendia
+              </h1>
+            </Link>
+            <Link href="/auctions">
+              <Button variant="outline" className="gap-2 border-gray-300 hover:border-orange-500 hover:text-orange-600 transition-all">
+                View Auctions
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Active Auctions</h2>
-          <p className="text-gray-600">Browse and participate in proof-of-burn sealed-bid auctions</p>
+      {/* Hero Section */}
+      <main>
+        <section className="relative max-w-7xl mx-auto px-6 py-16 md:py-24 lg:py-32 overflow-hidden">
+          {/* Decorative background elements */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute top-20 left-10 w-72 h-72 bg-orange-200/20 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-20 right-10 w-96 h-96 bg-red-200/20 rounded-full blur-3xl"></div>
+          </div>
+
+          <div className="text-center max-w-5xl mx-auto relative">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-100 to-red-100 rounded-full mb-8 border border-orange-200/50 shadow-sm hover:shadow-md transition-shadow">
+              <div className="p-1 rounded-full bg-orange-500">
+                <Flame className="h-3 w-3 text-white" />
+              </div>
+              <span className="text-sm font-semibold text-orange-900">ZKPassport • Private Bidding • Proof-of-Burn</span>
         </div>
 
+            <h1 className="text-6xl md:text-7xl lg:text-8xl font-extrabold text-gray-900 mb-6 leading-[1.1] tracking-tight">
+              Private Bidding with
+              <br />
+              <span className="bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 bg-clip-text text-transparent">
+                ZKPassport
+              </span>
+            </h1>
+            
+            <p className="text-xl md:text-2xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto font-light">
+              Experience truly <strong className="text-gray-900">private bidding</strong> powered by <strong className="text-orange-600">ZKPassport</strong> zero-knowledge verification. 
+              Your identity stays private, your bids remain completely secret until reveal, 
+              and everything is secured on-chain.
+            </p>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link href="/auctions">
+                <Button 
+                  size="lg" 
+                  className="gap-2 text-lg px-10 py-7 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/40 transition-all duration-300 hover:scale-105 border-0"
+                >
+                  Explore Auctions
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="text-lg px-10 py-7 border-2 border-gray-300 hover:border-orange-500 hover:text-orange-600 hover:bg-orange-50 transition-all duration-300"
+              >
+                Learn More
+              </Button>
+            </div>
           </div>
-        )}
+        </section>
 
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-red-800">{error}</p>
-            <button 
-              onClick={loadAuctions} 
-              className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
-            >
-              Retry
-            </button>
+        {/* Features Section */}
+        <section className="relative max-w-7xl mx-auto px-6 py-24 md:py-32 bg-white/60 backdrop-blur-sm">
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 rounded-full mb-6">
+              <Sparkles className="h-4 w-4 text-orange-600" />
+              <span className="text-sm font-medium text-orange-900">Why Choose Incendia?</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Built for Privacy & Security
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Built on cutting-edge zero-knowledge technology for maximum privacy and security
+            </p>
           </div>
-        )}
 
-        {/* Auctions Grid */}
-        {!loading && !error && auctions.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No auctions found</p>
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-10">
+            {/* Feature 1 */}
+            <div className="group bg-white p-10 rounded-2xl border-2 border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform duration-300">
+                <Shield className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">ZKPassport Verification</h3>
+              <p className="text-gray-600 leading-relaxed text-lg">
+                <strong className="text-gray-900">ZKPassport</strong> enables private identity verification using zero-knowledge proofs. 
+                Your personal information stays completely private while proving you meet auction requirements—no data leaks, no compromises.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="group bg-white p-10 rounded-2xl border-2 border-gray-200 shadow-sm hover:shadow-xl hover:border-purple-300 transition-all duration-300 hover:-translate-y-1">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform duration-300">
+                <Lock className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Private Bidding</h3>
+              <p className="text-gray-600 leading-relaxed text-lg">
+                <strong className="text-gray-900">Private bidding</strong> ensures your bids remain completely secret until the auction closes. 
+                No one can see your bid amount—not even the auction organizers—ensuring truly fair competition.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="group bg-white p-10 rounded-2xl border-2 border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 transition-all duration-300 hover:-translate-y-1">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center mb-6 shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform duration-300">
+                <Zap className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Proof-of-Burn</h3>
+              <p className="text-gray-600 leading-relaxed text-lg">
+                Participate by burning tokens as proof of commitment. This creates a 
+                verifiable, on-chain record of your participation.
+              </p>
+            </div>
           </div>
-        )}
+        </section>
 
-        {!loading && auctions.length > 0 && (
-          <div className="grid grid-cols-3 gap-6">
-            {auctions.map((auction, index) => {
-              const isActive = auction.biddingDeadline && auction.biddingDeadline > Math.floor(Date.now() / 1000)
-              const status = isActive ? "active" : "ended"
+        {/* How It Works Section */}
+        <section className="max-w-7xl mx-auto px-6 py-24 md:py-32">
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-full mb-6">
+              <Eye className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-900">How It Works</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Simple & Secure Process
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Simple steps to participate in secure, private auctions
+            </p>
+          </div>
 
+          <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            {[
+              {
+                step: "1",
+                title: "Register",
+                description: "Verify your identity with ZKPassport to register for the auction",
+                icon: Users,
+                color: "from-blue-500 to-blue-600"
+              },
+              {
+                step: "2",
+                title: "Burn Tokens",
+                description: "Burn tokens as proof of participation and commitment",
+                icon: Flame,
+                color: "from-orange-500 to-red-500"
+              },
+              {
+                step: "3",
+                title: "Submit Bid",
+                description: "Submit your sealed bid with zero-knowledge proof verification",
+                icon: Lock,
+                color: "from-purple-500 to-purple-600"
+              },
+              {
+                step: "4",
+                title: "Reveal",
+                description: "Wait for auction to close and results to be revealed on-chain",
+                icon: Eye,
+                color: "from-green-500 to-green-600"
+              }
+            ].map((item, index) => {
+              const Icon = item.icon
               return (
-                <div key={auction.address} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        isActive 
-                          ? "bg-gray-100 text-gray-800" 
-                          : "bg-white text-gray-500 border border-gray-300"
-                      }`}>
-                        {status}
-                      </span>
-                      {auction.biddingDeadline && (
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Clock className="h-4 w-4 mr-1" />
-                          <span>{formatTimeRemaining(auction.biddingDeadline)}</span>
-                        </div>
-                      )}
+                <div key={index} className="text-center group">
+                  <div className="relative mb-6">
+                    <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mx-auto text-white text-3xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                      {item.step}
                     </div>
-                    
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {auction.ceremonyId ? `Auction #${auction.ceremonyId}` : `Auction #${index + 1}`}
-                    </h3>
-                    
-                    <p className="font-mono text-sm text-gray-500 mb-4">
-                      {auction.address.slice(0, 10)}...{auction.address.slice(-8)}
-                    </p>
-                    
-                    <div className="space-y-2 mb-6">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Ceremony ID</span>
-                        <span className="font-mono">{auction.ceremonyId || "N/A"}</span>
-                      </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center shadow-md">
+                      <Icon className="h-4 w-4 text-gray-600" />
                     </div>
-                    
-                    <Link href={`/auction/${auction.address}`} className="block">
-                      <button 
-                        className={`w-full py-2 px-4 rounded text-sm font-medium transition-colors ${
-                          isActive 
-                            ? "bg-gray-900 text-white hover:bg-gray-800" 
-                            : "bg-gray-100 text-gray-500 cursor-not-allowed"
-                        }`}
-                        disabled={!isActive}
-                      >
-                        {isActive ? "View & Bid" : "View Results"}
-                      </button>
-                    </Link>
                   </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{item.description}</p>
                 </div>
               )
             })}
           </div>
-        )}
+        </section>
+
+        {/* Benefits Section */}
+        <section className="max-w-7xl mx-auto px-6 py-24 md:py-32 bg-gradient-to-br from-gray-50 to-orange-50/30">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 rounded-full mb-6">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-900">Key Benefits</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                Why You'll Love It
+              </h2>
+            </div>
+
+            <div className="space-y-6">
+              {[
+                "Complete privacy - your identity and bids remain confidential",
+                "On-chain verification - all proofs are verifiable on the blockchain",
+                "Fair competition - sealed bids prevent bid manipulation",
+                "Secure registration - ZKPassport ensures only eligible participants",
+                "Transparent results - final outcomes are publicly verifiable"
+              ].map((benefit, index) => (
+                <div key={index} className="flex items-start gap-5 group">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/20 group-hover:scale-110 transition-transform duration-300">
+                    <CheckCircle2 className="h-5 w-5 text-white" />
+                  </div>
+                  <p className="text-gray-700 text-xl leading-relaxed pt-1">{benefit}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="max-w-7xl mx-auto px-6 py-24 md:py-32">
+          <div className="relative bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 rounded-3xl p-12 md:p-16 text-center text-white overflow-hidden shadow-2xl">
+            {/* Decorative elements */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+            </div>
+            
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full mb-6 backdrop-blur-sm">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-sm font-medium">Ready to Get Started?</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+                Ready to Participate?
+              </h2>
+              <p className="text-xl md:text-2xl mb-10 text-orange-50 max-w-3xl mx-auto leading-relaxed">
+                Browse active auctions and start <strong>private bidding</strong> with <strong>ZKPassport</strong> verification—complete privacy and security guaranteed
+              </p>
+              <Link href="/auctions">
+                <Button 
+                  size="lg" 
+                  className="gap-3 text-lg px-10 py-7 bg-white text-orange-600 hover:bg-orange-50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 font-semibold"
+                >
+                  View All Auctions
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-white/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-red-500">
+                <Flame className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-lg font-bold text-gray-900">Incendia</span>
+            </div>
+            <p className="text-sm text-gray-500 text-center md:text-right">
+              © 2024 Incendia. Built for ETHGlobal Buenos Aires.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
