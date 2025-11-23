@@ -8,8 +8,9 @@
 
 ## Hedera Testnet deployments
 
-- **Verifier:**
-- **Auction**
-- **Factory:**
-- **Example SubmitBid Tx 1:**
-- **Example SubmitBid Tx 2:**
+- **Verifier:** [https://hashscan.io/testnet/contract/0.0.7306132](https://hashscan.io/testnet/contract/0.0.7306132)
+- **Auction** [https://hashscan.io/testnet/contract/0.0.7307004](https://hashscan.io/testnet/contract/0.0.7307004)
+- **Factory:** [https://hashscan.io/testnet/contract/0.0.7306976](https://hashscan.io/testnet/contract/0.0.7306976)
+- **Example SubmitBid Tx 1:** [https://hashscan.io/testnet/transaction/1763864149.277072542](https://hashscan.io/testnet/transaction/1763864149.277072542)
+- **Example SubmitBid Tx 2:** [https://hashscan.io/testnet/transaction/1763859649.983790204](https://hashscan.io/testnet/transaction/1763859649.983790204)
+- **[Not Deployed by us] Chainlink Oracle that we use:** [https://hashscan.io/testnet/contract/0.0.4870176](https://hashscan.io/testnet/contract/0.0.4870176)
