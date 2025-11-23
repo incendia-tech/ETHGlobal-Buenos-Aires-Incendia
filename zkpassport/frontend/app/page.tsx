@@ -4,12 +4,9 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Clock, Flame, Loader2 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { fetchDeployedAuctions, getAuctionDetails, type DeployedAuction } from "@/lib/contracts/factory"
 
-const DEFAULT_AUCTION = "0x94765117D62A0ca58CFD2c48cB3BC1ee7ed9DA1f"
+const DEFAULT_AUCTION = "0x32350FB0f5351380A07361A7a9887a0eA779bed2"
 
 function formatTimeRemaining(timestamp: number) {
   const now = Math.floor(Date.now() / 1000)
