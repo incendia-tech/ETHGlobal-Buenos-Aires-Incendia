@@ -59,7 +59,6 @@ export default function AuctionPage() {
   }, [params.id])
 
   useEffect(() => {
-    // Check wallet connection when contract address is set
     if (contractAddress) {
       checkWalletConnection()
     }
@@ -74,7 +73,6 @@ export default function AuctionPage() {
     } catch (error) {
       console.error("Failed to load auction details:", error)
       setError("Failed to load auction details")
-      // Set default auction details to prevent crashes
       setAuctionDetails({
         biddingDeadline: 0,
         bidSubmissionDeadline: 0,
@@ -121,7 +119,6 @@ export default function AuctionPage() {
       try {
         const isRegistered = await checkRegistration(contractAddress, account)
         if (!isRegistered) {
-          // Redirect to registration page
           console.log("User not registered, redirecting to registration page")
           router.push(`/auction/${contractAddress}/register`)
           return
@@ -184,8 +181,6 @@ export default function AuctionPage() {
         setCurrentStep("input")
       } catch (error: any) {
         console.error("Error checking registration:", error)
-        // If check fails, assume user is not registered and redirect
-        // This is safer than allowing unregistered users to proceed
         console.log("Registration check failed, redirecting to registration page")
         router.push(`/auction/${contractAddress}/register`)
       }

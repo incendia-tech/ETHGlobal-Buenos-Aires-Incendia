@@ -17,11 +17,8 @@ export interface LoadedProofData {
   publicSignals: string[]
 }
 
-// Load proof data from the data folder
 export async function loadProofData(): Promise<LoadedProofData> {
   try {
-    // In a real implementation, you might want to fetch from a remote endpoint
-    // For now, we'll return the data directly since it's static
     const proofData: ProofData = {
       "pi_a": [
         "15735234741036841031785444279490969598560196843641202116530397007303416185676",
