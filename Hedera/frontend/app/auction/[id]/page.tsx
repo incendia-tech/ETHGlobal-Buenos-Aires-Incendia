@@ -117,6 +117,7 @@ export default function AuctionPage() {
           "0xaa36a7": "Sepolia Testnet",
           "0x5": "Goerli Testnet",
           "0x13882": "Polygon Amoy Testnet",
+          "0x128": "Hedera Testnet"
         }
         setNetworkName(networks[chainId] || `Chain ID: ${chainId}`)
       } catch (error) {
@@ -319,7 +320,7 @@ export default function AuctionPage() {
     if (networkName.includes("Sepolia")) {
       return `https://sepolia.etherscan.io/tx/${txHash}`
     }
-    return `https://etherscan.io/tx/${txHash}`
+    return `https://hashscan.io/testnet/tx/${txHash}`
   }
 
   return (

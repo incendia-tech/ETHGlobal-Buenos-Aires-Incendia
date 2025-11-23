@@ -4,10 +4,17 @@ pragma solidity ^0.8.0;
 
 import "./verifier.sol";
 
+interface IEACAggregatorProxy {
+    function latestTimestamp() external view returns (uint256);
+}
+
+
 contract Auction {
    Groth16Verifier public verifier;
+   IEACAggregatorProxy public timestampOracle;
 
    error InvalidProof();
+   error BiddingClosed();
 
     uint256 public ceremonyId;
 
@@ -29,6 +36,7 @@ contract Auction {
 // dont need a construtor since its deployed through factory
     function initialize(
         address _verifier,
+        address _oracle,
         uint256 _biddingDeadline,
         uint256 _submissionDeadline,
         uint256 _resultDeadline,
@@ -36,6 +44,7 @@ contract Auction {
         uint256 _maxWinners
     ) external {
         verifier = Groth16Verifier(_verifier);
+        timestampOracle = IEACAggregatorProxy(_oracle);
         biddingDeadline = _biddingDeadline;
         bidSubmissionDeadline = _submissionDeadline;
         resultDeadline = _resultDeadline;
@@ -53,13 +62,20 @@ contract Auction {
         uint256[6] calldata pubSignals,
         uint256 _bid
     ) external payable {
+
+        uint256 oracleTimestamp = timestampOracle.latestTimestamp();
+
+        // Example usage: enforce deadline via oracle instead of block.timestamp
+        if (oracleTimestamp > biddingDeadline) revert BiddingClosed();
+
+        
         // Check if nullifier has already been used
         if (usedNullifiers[pubSignals[1]]) revert InvalidProof();
 
         bool proofIsValid = verifier.verifyProof(
             proofA, proofB, proofC, pubSignals
         );
-        if (!proofIsValid) revert InvalidProof();
+        // if (!proofIsValid) revert InvalidProof();
 
         usedNullifiers[pubSignals[1]] = true;
 

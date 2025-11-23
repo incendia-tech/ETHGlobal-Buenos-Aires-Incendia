@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { fetchDeployedAuctions, getAuctionDetails, type DeployedAuction } from "@/lib/contracts/factory"
 
-const DEFAULT_AUCTION = "0xFd7025653f5b791eB6de158b483b33B37d09757E"
+const DEFAULT_AUCTION = "0x0973bb028cec263bee4089069e6c43f5ebc4e1e5"
 
 function formatTimeRemaining(timestamp: number) {
   const now = Math.floor(Date.now() / 1000)

@@ -17,6 +17,7 @@ contract Factory {
         bytes32 _salt,
         CeremonyType _ceremonyType,
         address _verifier,
+        address _oracle,
         uint256 _biddingDealine,
         uint256 _submissionDeadline,
         uint256 _resultDeadline,
@@ -40,6 +41,7 @@ contract Factory {
         // Initialize the deployed contract
         Auction(auctionAddress).initialize(
             _verifier,
+            _oracle,
             _biddingDealine,
             _submissionDeadline,
             _resultDeadline,
