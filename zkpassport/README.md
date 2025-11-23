@@ -170,84 +170,18 @@ The contract verifies the proof on-chain, ensures the nullifier's uniqueness, an
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 📦 Prerequisites
-
-Before setting up the project, ensure the following tools are installed:
-
-### Required:
-- **Node.js** 18+ and npm
-- **Git**
-- **Rabby Wallet** (or compatible Web3 wallet) for frontend interaction
-- **Testnet ETH** (Sepolia) for testing
-
-### Optional but Recommended:
-- **Hardhat** (for contract development)
-- **Circom** (for circuit development)
-- **snarkjs** (for proof generation)
-
-## 🚀 Installation
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd zkpassport
-```
-
-### 2. Install Dependencies
-
-#### Frontend
-```bash
-cd frontend
-npm install
-```
-
-#### Contracts
-```bash
-cd contracts
-npm install
-```
-
-### 3. Environment Setup
-
-Create environment files as needed (see individual READMEs in `frontend/` and `contracts/` directories).
-
-### 4. Build Circuits (if modifying)
-
-```bash
-cd circuits
-# Follow circuit compilation instructions
-```
-
 ## 📖 Usage
 
 ### Running the Frontend
 
 ```bash
 cd frontend
+npm i
 npm run dev
 ```
 
 Visit `http://localhost:3000` to access the application.
 
-### Deploying Contracts
-
-```bash
-cd contracts
-npx hardhat ignition deploy ignition/modules/Auction.ts --network sepolia
-```
-
-### Testing
-
-```bash
-# Test contracts
-cd contracts
-npx hardhat test
-
-# Test frontend (if tests exist)
-cd frontend
-npm test
-```
 
 ## 📁 Project Structure
 
@@ -292,22 +226,9 @@ zkpassport/
 - **Factory Contract**: Deploys new auction instances
 - **Verifier Contract**: Verifies Groth16 proofs on-chain
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-[Add your license here]
-
 ## 🙏 Acknowledgments
 
 - Built for ETHGlobal Buenos Aires
 - Inspired by zero-knowledge voting protocols
 - Uses ZKPassport for identity verification
 - Powered by Circom and Groth16
-
----
-
-**Note**: This protocol is developed from scratch, inspired by zero-knowledge voting protocols but with a completely new architecture, circuits, and logic tailored specifically for bid submission and winner determination.
-
