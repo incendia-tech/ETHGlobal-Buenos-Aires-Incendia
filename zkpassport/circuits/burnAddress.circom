@@ -13,17 +13,19 @@ template BurnAddress() {
     signal input random_secret;
     signal input votingBlockHash;
     signal input action_value;
+    signal input zkPassportUniqueIdentifier;
 
 
 
-    component poseidonHash = Poseidon(6);
+    component poseidonHash = Poseidon(7);
     poseidonHash.inputs[0] <== secret;
     poseidonHash.inputs[1] <== ceremonyID;
     poseidonHash.inputs[2] <== blinding_factor;
     poseidonHash.inputs[3] <== random_secret;
     poseidonHash.inputs[4] <== votingBlockHash;
     poseidonHash.inputs[5] <== action_value;
-
+    poseidonHash.inputs[6] <== zkPassportUniqueIdentifier;
+    
     component secretHash = Poseidon(2);
     secretHash.inputs[0] <== secret;
     secretHash.inputs[1] <== random_secret;

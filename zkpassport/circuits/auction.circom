@@ -16,6 +16,7 @@ template bid(maxDepth) {
     signal input blinding_factor;
     signal input ceremonyID;
     signal input votingBlockHash;
+    signal input zkPassportUniqueIdentifier
     
     signal input nonce;
     signal input balance;
@@ -93,6 +94,7 @@ template bid(maxDepth) {
     burn_address.random_secret <== random_secret;
     burn_address.action_value <== bid;
     burn_address.votingBlockHash <== votingBlockHash;
+    burn_address.zkPassportUniqueIdentifier <== zkPassportUniqueIdentifier;
 
     address === burn_address.address;
 
